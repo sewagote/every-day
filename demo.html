@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Every Day</title>
-<meta name="theme-color" content="#F4EEE3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1C1A17" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191919" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Every Day">
@@ -24,7 +24,7 @@
   --done:#5E7F4E; --danger:#9E2A2B; --low:#A79F92; --warn-bg:#F6E1DC;
   --shadow:0 1px 0 rgb(80 60 30 / .05), 0 2px 8px rgb(80 60 30 / .07);
   --head:"Lora", Georgia, "Times New Roman", serif; --sans:"Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --hw:600; --hls:-.01em; --r:4px; --r2:6px; --sep:dashed;
+  --hw:600; --hls:-.01em; --r:4px; --r2:6px; --sep:dashed; --scrim:rgb(26 19 10 / .74);
   --strike:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='10' viewBox='0 0 60 10'%3E%3Cpath d='M0 6 C8 4 14 7 22 5 S38 3 46 6 S56 5 60 5' fill='none' stroke='%23C0573A' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); --strike-td:none;
   --c1:#2f6db5; --c2:#c0573a; --c3:#2e8c63; --c4:#a8750e; --c5:#8d4fa8; --c6:#00939e; --c7:#6f7d14; --c8:#c2457a;
   color-scheme:light dark;
@@ -307,7 +307,7 @@ details.faq p{margin-top:6px;font-size:.9rem;color:var(--mute);line-height:1.55}
 
 /* диалоги, тост, подсказки */
 dialog{border:1px solid var(--line2);border-radius:var(--r2);padding:0;background:var(--card);color:var(--ink);width:min(460px,calc(100vw - 24px));max-height:calc(100vh - 40px);box-shadow:0 20px 50px rgb(40 30 15 / .3)}
-dialog::backdrop{background:rgb(40 30 15 / .45)}
+dialog::backdrop{background:rgb(15 15 15 / .62);background:var(--scrim, rgb(15 15 15 / .62))}
 .dlg{padding:20px;display:grid;gap:12px}
 .dlg h2{margin:0}
 .dlg label{display:grid;gap:4px;font-size:.85rem;color:var(--mute)}
@@ -316,7 +316,7 @@ dialog::backdrop{background:rgb(40 30 15 / .45)}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:var(--r2);font-size:.9rem;z-index:50;display:flex;gap:14px;align-items:center;max-width:calc(100vw - 32px);box-shadow:0 6px 20px rgb(0 0 0 / .2)}
 .toast button{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:0}
 #tour{position:fixed;inset:0;z-index:80}
-.tour-spot{position:absolute;border-radius:var(--r2);box-shadow:0 0 0 9999px rgb(40 30 15 / .55);transition:all .25s ease;pointer-events:none}
+.tour-spot{position:absolute;border-radius:var(--r2);box-shadow:0 0 0 9999px var(--scrim);transition:all .25s ease;pointer-events:none}
 .tour-card{position:absolute;left:12px;right:12px;max-width:400px;margin:0 auto;background:var(--card);color:var(--ink);border:1px solid var(--line2);border-radius:var(--r2);padding:16px;box-shadow:0 10px 30px rgb(0 0 0 / .3);display:grid;gap:8px;transition:top .25s ease}
 .tour-card h2{margin:0}
 .tour-card p{font-size:.93rem;line-height:1.5}
@@ -356,6 +356,32 @@ dialog::backdrop{background:rgb(40 30 15 / .45)}
 #lookPanel{position:fixed;left:16px;bottom:calc(134px + env(safe-area-inset-bottom,0px));z-index:70;width:min(380px,calc(100vw - 32px));max-height:72vh;overflow:auto;background:var(--card);border:1px solid var(--line2);border-radius:var(--r2);box-shadow:0 12px 40px rgb(0 0 0 / .25);padding:14px}
 #lookPanel .looks{grid-template-columns:1fr 1fr}
 @media (min-width:900px){#lookFab{bottom:24px}#lookPanel{bottom:76px}}
+/* оттенки варианта «Как Notion» */
+:root[data-look="notion"][data-tone="blue"]{--accent:#0075DE; --accent-ink:#0062BA; --soft:#E6F3FE; --on-accent:#FFFFFF; --bg:#FFFFFF; --card2:#F7F7F5; --line:#EDEDEC;}
+@media (prefers-color-scheme: dark){:root[data-look="notion"][data-tone="blue"]:not([data-theme="light"]){--accent:#2E8FEA; --accent-ink:#5AA7EE; --soft:#1B2D40; --on-accent:#08131F; --bg:#191919; --card2:#252525; --line:#2F2F2F;}}
+:root[data-look="notion"][data-tone="blue"][data-theme="dark"]{--accent:#2E8FEA; --accent-ink:#5AA7EE; --soft:#1B2D40; --on-accent:#08131F; --bg:#191919; --card2:#252525; --line:#2F2F2F;}
+:root[data-look="notion"][data-tone="graphite"]{--accent:#37352F; --accent-ink:#37352F; --soft:#F1F1EF; --on-accent:#FFFFFF; --bg:#FFFFFF; --card2:#F7F7F5; --line:#EDEDEC;}
+@media (prefers-color-scheme: dark){:root[data-look="notion"][data-tone="graphite"]:not([data-theme="light"]){--accent:#E6E6E5; --accent-ink:#F2F2F1; --soft:#2F2F2F; --on-accent:#191919; --bg:#191919; --card2:#252525; --line:#2F2F2F;}}
+:root[data-look="notion"][data-tone="graphite"][data-theme="dark"]{--accent:#E6E6E5; --accent-ink:#F2F2F1; --soft:#2F2F2F; --on-accent:#191919; --bg:#191919; --card2:#252525; --line:#2F2F2F;}
+:root[data-look="notion"][data-tone="sand"]{--accent:#9F6B53; --accent-ink:#8A5A44; --soft:#F4EEEA; --on-accent:#FFFFFF; --bg:#FBFAF7; --card2:#F5F2EC; --line:#ECE6DC;}
+@media (prefers-color-scheme: dark){:root[data-look="notion"][data-tone="sand"]:not([data-theme="light"]){--accent:#BA8566; --accent-ink:#CC9E82; --soft:#33281F; --on-accent:#191512; --bg:#1A1816; --card2:#24211D; --line:#33302B;}}
+:root[data-look="notion"][data-tone="sand"][data-theme="dark"]{--accent:#BA8566; --accent-ink:#CC9E82; --soft:#33281F; --on-accent:#191512; --bg:#1A1816; --card2:#24211D; --line:#33302B;}
+:root[data-look="notion"][data-tone="sage"]{--accent:#448361; --accent-ink:#3A7154; --soft:#EDF3EC; --on-accent:#FFFFFF; --bg:#FFFFFF; --card2:#F6F8F5; --line:#E9EEE8;}
+@media (prefers-color-scheme: dark){:root[data-look="notion"][data-tone="sage"]:not([data-theme="light"]){--accent:#4DAB79; --accent-ink:#6CC08F; --soft:#1F3328; --on-accent:#0F1A14; --bg:#181A19; --card2:#222624; --line:#2E332F;}}
+:root[data-look="notion"][data-tone="sage"][data-theme="dark"]{--accent:#4DAB79; --accent-ink:#6CC08F; --soft:#1F3328; --on-accent:#0F1A14; --bg:#181A19; --card2:#222624; --line:#2E332F;}
+:root[data-look="notion"][data-tone="plum"]{--accent:#9065B0; --accent-ink:#7A519A; --soft:#F6F3F9; --on-accent:#FFFFFF; --bg:#FFFFFF; --card2:#F8F6FA; --line:#ECE8F0;}
+@media (prefers-color-scheme: dark){:root[data-look="notion"][data-tone="plum"]:not([data-theme="light"]){--accent:#A97BDB; --accent-ink:#BE9BE6; --soft:#2C2338; --on-accent:#120B1A; --bg:#19181B; --card2:#242228; --line:#322F37;}}
+:root[data-look="notion"][data-tone="plum"][data-theme="dark"]{--accent:#A97BDB; --accent-ink:#BE9BE6; --soft:#2C2338; --on-accent:#120B1A; --bg:#19181B; --card2:#242228; --line:#322F37;}
+:root[data-look="notion"][data-tone="orange"]{--accent:#B85C0B; --accent-ink:#9C4E09; --soft:#FBECDD; --on-accent:#FFFFFF; --bg:#FFFFFF; --card2:#FAF7F3; --line:#EFE9E2;}
+@media (prefers-color-scheme: dark){:root[data-look="notion"][data-tone="orange"]:not([data-theme="light"]){--accent:#DE8B4A; --accent-ink:#E9A36E; --soft:#3A2A1B; --on-accent:#1A120B; --bg:#1A1817; --card2:#252220; --line:#332F2B;}}
+:root[data-look="notion"][data-tone="orange"][data-theme="dark"]{--accent:#DE8B4A; --accent-ink:#E9A36E; --soft:#3A2A1B; --on-accent:#1A120B; --bg:#1A1817; --card2:#252220; --line:#332F2B;}
+:root[data-look]:not([data-look="paper"]){--scrim:rgb(12 12 12 / .74)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--scrim:rgb(0 0 0 / .78)}}
+:root[data-theme="dark"]{--scrim:rgb(0 0 0 / .78)}
+.tones{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tone{display:flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:5px 12px 5px 6px;font-size:.86rem}
+.tone i{width:18px;height:18px;border-radius:50%;flex:none}
+.tone[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);font-weight:600}
 </style>
 </head>
 <body>
@@ -1160,6 +1186,7 @@ function renderSet() {
       <div class="seg" role="group" aria-label="Тема">${[['system', 'Авто'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([v, n]) => `<button type="button" data-theme-set="${v}" aria-pressed="${S.theme === v}">${n}</button>`).join('')}</div>
     </div>
     <p class="mute sm">Шрифты и цвета. Выбор хранится на этом устройстве.</p>
+    ${toneChips() ? `<h3>Оттенок</h3>${toneChips()}<h3>Другие варианты</h3>` : ''}
     <div class="looks">${lookCards()}</div>
   </section>
 
@@ -1278,28 +1305,33 @@ function go(tab) { V.tab = tab; history.replaceState(null, '', '#' + tab); rende
 function applyTheme() {
   const h = document.documentElement;
   if (S.theme === 'system') delete h.dataset.theme; else h.dataset.theme = S.theme;
-  if (S.look && S.look !== 'paper') h.dataset.look = S.look; else delete h.dataset.look;
+  const look = S.look || 'notion';
+  if (look !== 'paper') h.dataset.look = look; else delete h.dataset.look;
+  h.dataset.tone = S.tone || 'blue';
 }
 /* ---------- варианты оформления ---------- */
 const LOOKS = [
-  { id: 'paper', name: 'Бумажный', note: 'Lora и Onest. Крем, графит, терракота. Текущий вариант', sw: ['#F4EEE3', '#C0573A', '#2B2A26'], font: '"Lora", serif' },
+  { id: 'notion', name: 'Как Notion', note: 'Inter. Белый фон и минимум цвета. По умолчанию, есть оттенки', sw: ['#FFFFFF', '#0075DE', '#37352F'], font: '"Inter", sans-serif' },
+  { id: 'paper', name: 'Бумажный', note: 'Lora и Onest. Крем, графит, терракота', sw: ['#F4EEE3', '#C0573A', '#2B2A26'], font: '"Lora", serif' },
   { id: 'strict', name: 'Строгий', note: 'IBM Plex Sans. Тёплый серый и тёмно-синий, прямые углы, без декора', sw: ['#F3F2EF', '#1F3A5F', '#1B1B19'], font: '"IBM Plex Sans", sans-serif' },
   { id: 'editorial', name: 'Журнальный', note: 'PT Serif и Golos Text. Белая бумага, чёрный текст, красный акцент', sw: ['#FAF8F4', '#B4232C', '#121212'], font: '"PT Serif", serif' },
   { id: 'linear', name: 'Как Linear', note: 'Inter. Холодный серый и индиго, плотно и точно', sw: ['#F7F8F9', '#5E6AD2', '#17181A'], font: '"Inter", sans-serif' },
-  { id: 'things', name: 'Как Things', note: 'Системный шрифт. Мягкие скруглённые карточки, синий акцент', sw: ['#F2F5F7', '#3A82F7', '#303336'], font: 'system-ui, sans-serif' },
-  { id: 'notion', name: 'Как Notion', note: 'Inter. Белый фон и минимум цвета', sw: ['#FFFFFF', '#0075DE', '#37352F'], font: '"Inter", sans-serif' }
+  { id: 'things', name: 'Как Things', note: 'Системный шрифт. Мягкие скруглённые карточки, синий акцент', sw: ['#F2F5F7', '#3A82F7', '#303336'], font: 'system-ui, sans-serif' }
 ];
-const lookCards = () => LOOKS.map(l => `<button type="button" class="look" data-look-set="${l.id}" aria-pressed="${(S.look || 'paper') === l.id}">
+const lookCards = () => LOOKS.map(l => `<button type="button" class="look" data-look-set="${l.id}" aria-pressed="${(S.look || 'notion') === l.id}">
   <span class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="aa" style="font-family:${l.font}">Аа 52%</span><span class="sw3">${l.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span></span>
   <b>${l.name}</b><small>${l.note}</small></button>`).join('');
+const TONES = [{ id: 'blue', name: 'Синий', sw: '#0075DE' }, { id: 'graphite', name: 'Графит', sw: '#37352F' }, { id: 'sand', name: 'Песок', sw: '#9F6B53' }, { id: 'sage', name: 'Шалфей', sw: '#448361' }, { id: 'plum', name: 'Лаванда', sw: '#9065B0' }, { id: 'orange', name: 'Апельсин', sw: '#B85C0B' }];
+const toneChips = () => (S.look || 'notion') !== 'notion' ? '' : `<div class="tones" role="group" aria-label="Оттенок">${TONES.map(t => `<button type="button" class="tone" data-tone-set="${t.id}" aria-pressed="${(S.tone || 'blue') === t.id}"><i style="background:${t.sw}"></i>${t.name}</button>`).join('')}</div>`;
 function paintLooks() {
+  const tn = $('#toneList'); if (tn) tn.innerHTML = toneChips();
   const el = $('#lookList'); if (el) el.innerHTML = lookCards();
   document.querySelectorAll('[data-theme-set]').forEach(b => b.setAttribute('aria-pressed', S.theme === b.dataset.themeSet));
-  document.querySelectorAll('[data-look-set]').forEach(b => b.setAttribute('aria-pressed', (S.look || 'paper') === b.dataset.lookSet));
+  document.querySelectorAll('[data-look-set]').forEach(b => b.setAttribute('aria-pressed', (S.look || 'notion') === b.dataset.lookSet));
 }
 document.addEventListener('click', e => {
-  const l = e.target.closest('[data-look-set]'), t = e.target.closest('[data-theme-set]');
-  if (l) S.look = l.dataset.lookSet; else if (t) S.theme = t.dataset.themeSet; else return;
+  const l = e.target.closest('[data-look-set]'), t = e.target.closest('[data-theme-set]'), tn = e.target.closest('[data-tone-set]');
+  if (l) S.look = l.dataset.lookSet; else if (t) S.theme = t.dataset.themeSet; else if (tn) S.tone = tn.dataset.toneSet; else return;
   saveS(); applyTheme(); paintLooks();
   if (!$('#lookPanel') || $('#lookPanel').hidden) render();
 });
@@ -1890,6 +1922,7 @@ if (DEMO) { // в демо — плавающая панель, чтобы бы�
   document.body.insertAdjacentHTML('beforeend', `<button id="lookFab" type="button" aria-expanded="false" aria-controls="lookPanel">Оформление</button>
   <div id="lookPanel" hidden><div class="card-h"><h2 style="font-size:1.05rem">Вариант оформления</h2><button class="icon" type="button" id="lookClose" aria-label="Закрыть">✕</button></div>
   <div class="seg" role="group" aria-label="Тема"><button type="button" data-theme-set="light">Светлая</button><button type="button" data-theme-set="dark">Тёмная</button><button type="button" data-theme-set="system">Авто</button></div>
+  <div id="toneList"></div>
   <div class="looks" id="lookList"></div></div>`);
   $('#lookFab').onclick = () => { const pn = $('#lookPanel'); pn.hidden = !pn.hidden; $('#lookFab').setAttribute('aria-expanded', !pn.hidden); paintLooks(); };
   $('#lookClose').onclick = () => { $('#lookPanel').hidden = true; $('#lookFab').setAttribute('aria-expanded', 'false'); };
