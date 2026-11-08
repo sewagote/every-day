@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Every Day</title>
-<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#191919" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FBFAF7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1816" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Every Day">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='10' fill='%23C0573A'/%3E%3Cpath d='M20 33l8 8 16-17' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='10' fill='%239F6B53'/%3E%3Cpath d='M20 33l8 8 16-17' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Onest:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=PT+Serif:wght@400;700&family=Golos+Text:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1358,11 +1358,11 @@ function applyTheme() {
   if (S.theme === 'system') delete h.dataset.theme; else h.dataset.theme = S.theme;
   const look = S.look || 'notion';
   if (look !== 'paper') h.dataset.look = look; else delete h.dataset.look;
-  h.dataset.tone = S.tone || 'blue';
+  h.dataset.tone = S.tone || 'sand';
 }
 /* ---------- варианты оформления ---------- */
 const LOOKS = [
-  { id: 'notion', name: 'Как Notion', note: 'Inter. Белый фон и минимум цвета. По умолчанию, есть оттенки', sw: ['#FFFFFF', '#0075DE', '#37352F'], font: '"Inter", sans-serif' },
+  { id: 'notion', name: 'Как Notion', note: 'Inter, тёплый белый фон, песочный акцент. По умолчанию, есть оттенки', sw: ['#FBFAF7', '#9F6B53', '#37352F'], font: '"Inter", sans-serif' },
   { id: 'paper', name: 'Бумажный', note: 'Lora и Onest. Крем, графит, терракота', sw: ['#F4EEE3', '#C0573A', '#2B2A26'], font: '"Lora", serif' },
   { id: 'strict', name: 'Строгий', note: 'IBM Plex Sans. Тёплый серый и тёмно-синий, прямые углы, без декора', sw: ['#F3F2EF', '#1F3A5F', '#1B1B19'], font: '"IBM Plex Sans", sans-serif' },
   { id: 'editorial', name: 'Журнальный', note: 'PT Serif и Golos Text. Белая бумага, чёрный текст, красный акцент', sw: ['#FAF8F4', '#B4232C', '#121212'], font: '"PT Serif", serif' },
@@ -1372,8 +1372,8 @@ const LOOKS = [
 const lookCards = () => LOOKS.map(l => `<button type="button" class="look" data-look-set="${l.id}" aria-pressed="${(S.look || 'notion') === l.id}">
   <span class="row" style="justify-content:space-between;flex-wrap:nowrap"><span class="aa" style="font-family:${l.font}">Аа 52%</span><span class="sw3">${l.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span></span>
   <b>${l.name}</b><small>${l.note}</small></button>`).join('');
-const TONES = [{ id: 'blue', name: 'Синий', sw: '#0075DE' }, { id: 'graphite', name: 'Графит', sw: '#37352F' }, { id: 'sand', name: 'Песок', sw: '#9F6B53' }, { id: 'sage', name: 'Шалфей', sw: '#448361' }, { id: 'plum', name: 'Лаванда', sw: '#9065B0' }, { id: 'orange', name: 'Апельсин', sw: '#B85C0B' }];
-const toneChips = () => (S.look || 'notion') !== 'notion' ? '' : `<div class="tones" role="group" aria-label="Оттенок">${TONES.map(t => `<button type="button" class="tone" data-tone-set="${t.id}" aria-pressed="${(S.tone || 'blue') === t.id}"><i style="background:${t.sw}"></i>${t.name}</button>`).join('')}</div>`;
+const TONES = [{ id: 'sand', name: 'Песок', sw: '#9F6B53' }, { id: 'blue', name: 'Синий', sw: '#0075DE' }, { id: 'graphite', name: 'Графит', sw: '#37352F' }, { id: 'sage', name: 'Шалфей', sw: '#448361' }, { id: 'plum', name: 'Лаванда', sw: '#9065B0' }, { id: 'orange', name: 'Апельсин', sw: '#B85C0B' }];
+const toneChips = () => (S.look || 'notion') !== 'notion' ? '' : `<div class="tones" role="group" aria-label="Оттенок">${TONES.map(t => `<button type="button" class="tone" data-tone-set="${t.id}" aria-pressed="${(S.tone || 'sand') === t.id}"><i style="background:${t.sw}"></i>${t.name}</button>`).join('')}</div>`;
 function paintLooks() {
   const tn = $('#toneList'); if (tn) tn.innerHTML = toneChips();
   const el = $('#lookList'); if (el) el.innerHTML = lookCards();
