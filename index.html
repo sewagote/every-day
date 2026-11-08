@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Every Day</title>
+<meta name="theme-color" content="#EEF1F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12151C" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Every Day">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='14' fill='%236366F1'/%3E%3Cpath d='M20 33l8 8 16-17' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F7; --card:#FFFFFF; --ink:#172033; --mute:#5F6A85; --line:#DCE2EE;
+  --accent:#2F5BFF; --soft:#E4EAFF; --done:#1F9D6B; --danger:#D9485F; --low:#9AA3B8; --on-accent:#fff;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#008300; --c7:#6250d6; --c8:#e34948;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151C; --card:#1A1F2A; --ink:#E8ECF4; --mute:#98A2BC; --line:#2A3142;
+    --accent:#7D98FF; --soft:#232C4A; --done:#3CC08A; --danger:#F0697E; --low:#6E7891; --on-accent:#10131A;
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12151C; --card:#1A1F2A; --ink:#E8ECF4; --mute:#98A2BC; --line:#2A3142;
+  --accent:#7D98FF; --soft:#232C4A; --done:#3CC08A; --danger:#F0697E; --low:#6E7891; --on-accent:#10131A;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#008300; --c7:#9085e9; --c8:#e66767;
+}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Onest",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+h1{font-size:1.85rem;line-height:1.1;letter-spacing:-.02em;margin:0}
+h2{font-size:1.05rem;margin:0 0 10px}
+h3{font-size:.95rem;margin:16px 0 8px}
+.mute{color:var(--mute)} .sm{font-size:.85rem} .grow{flex:1}
+.good{color:var(--done)} .bad{color:var(--danger)}
+p{margin:0}
+
+/* верх и нижнее меню */
+.top{position:sticky;top:0;z-index:20;background:var(--bg);padding:env(safe-area-inset-top,0px) 16px 0}
+.top-in{max-width:760px;margin:0 auto;height:54px;display:flex;align-items:center;gap:10px}
+.brand{font-weight:700;font-size:1.1rem;letter-spacing:-.02em;white-space:nowrap}
+.run-chip{display:flex;align-items:center;gap:8px;border:0;background:var(--accent);color:var(--on-accent);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:600;max-width:62vw;min-width:0}
+.run-chip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.run-chip .n{font-variant-numeric:tabular-nums}
+.sync{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;padding:0;flex:none}
+.sync i{width:9px;height:9px;border-radius:50%;background:var(--low)}
+.sync.ok i{background:var(--done)} .sync.err i{background:var(--danger)} .sync.busy i{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+main{max-width:760px;margin:0 auto;padding:6px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:4px}
+.tabs button{flex:1;max-width:150px;border:0;background:none;border-radius:12px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.74rem;color:var(--mute)}
+.tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current="page"]{color:var(--accent);background:var(--soft)}
+
+/* общие элементы */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:14px}
+.card-h{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.card-h h2{margin:0;flex:1}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.head{display:flex;align-items:center;gap:8px;margin-top:12px}
+.date{margin-top:4px;color:var(--mute)}
+.date::first-letter{text-transform:uppercase}
+.ghost{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:.88rem;white-space:nowrap}
+.icon{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:1.2rem;line-height:1;flex:none}
+.primary{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:10px 16px;font-weight:600}
+.secondary{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px}
+.danger{color:var(--danger)}
+.link{border:0;background:none;color:var(--accent);padding:0;font-weight:600}
+input[type=text],input[type=password],input[type=date],select{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 11px;min-width:0}
+input[type=date]{min-height:42px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;padding:3px;background:var(--bg);gap:2px}
+.seg button{border:0;background:none;border-radius:9px;padding:6px 11px;font-size:.88rem;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0 / .14);font-weight:600}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:.88rem}
+.chip.skip[aria-pressed="true"]{background:var(--danger);border-color:var(--danger);color:#fff}
+.note{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:.9rem}
+.note.warn{background:color-mix(in srgb,var(--danger) 14%,transparent)}
+.empty{padding:14px 4px;color:var(--mute);font-size:.92rem}
+.cdot{width:24px;height:24px;border-radius:7px;background:var(--cc);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff;flex:none}
+
+/* строки план/факт */
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 10px;padding:11px 0;border-top:1px solid var(--line)}
+.prow:first-of-type{border-top:0}
+.pname{display:flex;align-items:center;gap:8px;font-weight:500;min-width:0}
+.pname span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pnum{font-variant-numeric:tabular-nums;font-size:.9rem;text-align:right;white-space:nowrap}
+.pbar{grid-column:1/-1;position:relative;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;background:var(--cc);border-radius:4px}
+.pbar b{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--ink);opacity:.6}
+.pmeta{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--mute)}
+.hrs{display:flex;align-items:center;gap:6px}
+.hrs input{width:64px;text-align:right;padding:7px 9px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--mute);margin-top:8px}
+.legend .mk{display:inline-block;width:2px;height:10px;background:var(--ink);opacity:.6;vertical-align:-1px;margin-right:5px}
+
+/* задачи */
+.add{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.add input[type=text]{flex:1 1 200px}
+.add select{flex:1 1 120px;max-width:220px}
+.tasks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.task{display:flex;align-items:center;gap:10px;background:var(--bg);border-left:4px solid var(--cc);border-radius:12px;padding:8px 10px}
+.task .chk{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);background:var(--card);flex:none;display:grid;place-items:center;padding:0;font-size:.9rem;font-weight:700}
+.task.done .chk{background:var(--done);border-color:var(--done);color:#fff}
+.task .body{flex:1;min-width:0;border:0;background:none;text-align:left;padding:2px 0}
+.task .title{display:block;overflow-wrap:anywhere}
+.task.done .title{text-decoration:line-through;color:var(--mute)}
+.task .meta{display:block;font-size:.8rem;color:var(--mute)}
+.timer{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 11px;font-variant-numeric:tabular-nums;font-size:.88rem;flex:none}
+.timer.run{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* неделя */
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:14px}
+.dcell{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:7px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.dcell .wd{color:var(--mute);font-size:.7rem;text-transform:uppercase}
+.dcell .dn{font-size:1.05rem;font-weight:700;line-height:1.2}
+.dcell .k{font-size:.68rem;color:var(--mute);height:1.2em;white-space:nowrap}
+.dcell .f{font-size:.7rem;font-variant-numeric:tabular-nums;color:var(--mute)}
+.dcell.main{border-color:var(--accent);background:var(--soft)}
+.dcell.main .k{color:var(--accent);font-weight:600}
+.dcell.off{background:var(--bg)}
+.dcell.skip .dn{text-decoration:line-through;color:var(--danger)}
+.dcell.today .wd{color:var(--accent);font-weight:700}
+.dcell[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.daybar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.stats div{background:var(--bg);border-radius:12px;padding:10px 12px}
+.stats b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stats span{font-size:.78rem;color:var(--mute)}
+.gwrap{overflow-x:auto;margin:0 -6px;padding:0 6px}
+table.g{border-collapse:collapse;width:100%;font-size:.82rem;font-variant-numeric:tabular-nums}
+.g th,.g td{padding:7px 4px;text-align:center;border-top:1px solid var(--line);white-space:nowrap}
+.g thead th{border-top:0;font-weight:500;color:var(--mute);font-size:.74rem}
+.g th:first-child,.g td:first-child{text-align:left;position:sticky;left:0;background:var(--card);padding-right:8px;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.g th,.g td{padding:7px 2px}.g th:first-child,.g td:first-child{max-width:78px;font-size:.78rem}.g td small{font-size:.66rem}}
+.g td small{display:block;color:var(--mute);font-size:.7rem}
+.g td.ok b{color:var(--done)} .g td.miss b{color:var(--danger)}
+.g td.offd{color:var(--low)}
+.g th.skip{color:var(--danger);text-decoration:line-through}
+.g th.main{color:var(--accent);font-weight:700}
+.g tfoot td{font-weight:600}
+
+/* категории и настройки */
+.crow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.crow:first-of-type{border-top:0}
+.crow b{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cedit{display:grid;gap:10px;padding:4px 0 14px}
+.swatches,.emojis{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:32px;height:32px;border-radius:50%;border:3px solid transparent;background:var(--cc);padding:0}
+.sw[aria-pressed="true"]{border-color:var(--ink)}
+.emo{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);padding:0;font-size:1.1rem}
+.emo[aria-pressed="true"]{border-color:var(--accent);background:var(--soft)}
+.tpl{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+.tpl button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 2px;font-size:.78rem;display:grid;gap:2px}
+.tpl button b{font-size:.9rem}
+.tpl button.main{border-color:var(--accent);background:var(--soft);color:var(--accent)}
+.tpl button.off{background:var(--bg);color:var(--mute)}
+.field{display:grid;gap:5px;margin-top:10px;font-size:.85rem;color:var(--mute)}
+.field input{color:var(--ink);font-size:1rem;width:100%}
+code{font-size:.85em;background:var(--bg);padding:1px 5px;border-radius:5px}
+ol.help{margin:8px 0 0;padding-left:20px;font-size:.88rem;color:var(--mute)}
+ol.help li{margin:3px 0}
+
+/* диалог и тост */
+dialog{border:0;border-radius:18px;padding:0;background:var(--card);color:var(--ink);width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgb(0 0 0 / .45)}
+.dlg{padding:18px;display:grid;gap:12px}
+.dlg h2{margin:0}
+.dlg label{display:grid;gap:4px;font-size:.85rem;color:var(--mute)}
+.dlg input,.dlg select{color:var(--ink);font-size:1rem;width:100%}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.9rem;z-index:50;display:flex;gap:14px;align-items:center;max-width:calc(100vw - 32px);box-shadow:0 6px 20px rgb(0 0 0 / .2)}
+.toast button{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:0}
+@media (max-width:420px){
+  h1{font-size:1.6rem}
+  .seg button{padding:6px 9px}
+  .card{padding:12px 13px}
+  .stats b{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <span class="brand">Every Day</span>
+    <span class="grow"></span>
+    <button class="run-chip" id="runChip" type="button" hidden></button>
+    <button class="sync" id="syncBtn" type="button" title="Синхронизация выключена" aria-label="Синхронизация"><i></i></button>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<nav class="tabs" aria-label="Разделы">
+  <button type="button" data-tab="day"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>День</button>
+  <button type="button" data-tab="week"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Неделя</button>
+  <button type="button" data-tab="cats"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Категории</button>
+  <button type="button" data-tab="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Настройки</button>
+</nav>
+
+<dialog id="dlg">
+  <form method="dialog" class="dlg" id="dlgForm">
+    <h2>Задача</h2>
+    <label>Название<input type="text" name="title" required maxlength="140" autocomplete="off"></label>
+    <label>Категория<select name="cat"></select></label>
+    <label>День задачи<input type="date" name="day" required></label>
+    <label><span id="dlgMinLbl">Время за день, минут</span><input type="text" name="min" inputmode="numeric" autocomplete="off"></label>
+    <p class="mute sm" id="dlgInfo"></p>
+    <div class="row">
+      <button class="primary" value="save">Сохранить</button>
+      <button class="secondary" value="cancel" formnovalidate>Отмена</button>
+      <span class="grow"></span>
+      <button class="secondary danger" value="del" formnovalidate>Удалить</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= утилиты ================= */
+const KEY = 'everyday-v2', SKEY = 'everyday-settings', FILE = 'every-day.json';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+const clone = o => JSON.parse(JSON.stringify(o));
+
+// даты храним строкой YYYY-MM-DD в местном времени
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
+const today = () => iso(new Date());
+const weekStart = s => addDays(s, -((parse(s).getDay() + 6) % 7));
+const wdIdx = s => (parse(s).getDay() + 6) % 7;
+const weekDays = ws => [0, 1, 2, 3, 4, 5, 6].map(i => addDays(ws, i));
+const WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const fmtLong = s => parse(s).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtShort = s => parse(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }).replace('.', '');
+
+// длительности
+const hmm = sec => { const neg = sec < 0; const m = Math.round(Math.abs(sec) / 60); return (neg ? '−' : '') + Math.floor(m / 60) + ':' + pad(m % 60); };
+const hm = sec => { const m = Math.round(Math.max(0, sec) / 60), h = Math.floor(m / 60); return h ? `${h} ч${m % 60 ? ' ' + (m % 60) + ' мин' : ''}` : `${m} мин`; };
+const clock = sec => { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + ':' + pad(m) : m) + ':' + pad(s); };
+const hoursStr = min => { const h = min / 60; return Number.isInteger(h) ? String(h) : String(Math.round(h * 100) / 100).replace('.', ','); };
+
+/* ================= данные =================
+   Всё лежит в localStorage. Каждая запись имеет id и u (время последнего изменения).
+   Удалённые записи остаются с del:true, чтобы удаление доехало до другого устройства.
+   При синхронизации записи склеиваются по id: побеждает та, что изменена позже. */
+const SLOTS = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'];
+const EMOJI = ['🗣️', '💻', '🧮', '📘', '📚', '🧠', '🏋️', '🎧', '✍️', '🎯', '🔬', '🎨', '💼', '🏠', '🧘', '🎮', '⚙️', '🌍', '🧪', '❤️'];
+const KN = { main: 'Главный', normal: 'Обычный', off: 'Выходной' };
+const W = { main: 2, normal: 1, off: 0 }; // вес дня: главный получает вдвое больше часов, выходной — ноль
+
+const blank = () => ({ v: 2, cats: {}, tasks: {}, weeks: {}, days: {}, tpl: { kinds: ['normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'off'], u: 0 } });
+function load() {
+  try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.v === 2) return Object.assign(blank(), x); } catch (e) {}
+  const d = blank();
+  // стартовые категории с постоянными id, чтобы на двух устройствах не появилось дублей
+  d.cats['seed-en'] = { id: 'seed-en', name: 'Английский', color: 'c1', emoji: '🗣️', order: 1, u: 1 };
+  d.cats['seed-cp'] = { id: 'seed-cp', name: 'CP', color: 'c2', emoji: '💻', order: 2, u: 1 };
+  return d;
+}
+let D = load();
+let S = Object.assign({ theme: 'system', token: '', gist: '', last: 0, lastCat: '' }, (() => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch (e) { return {}; } })());
+const saveS = () => localStorage.setItem(SKEY, JSON.stringify(S));
+
+const touch = o => { o.u = Date.now(); return o; };
+const live = c => Object.values(D[c]).filter(x => !x.del);
+const cats = () => live('cats').sort((a, b) => (a.order || 0) - (b.order || 0) || a.name.localeCompare(b.name));
+const catById = id => { const c = id && D.cats[id]; return c && !c.del ? c : null; };
+const catColor = c => c ? c.color : 'low';
+const catDot = c => `<span class="cdot" style="--cc:var(--${catColor(c)})" aria-hidden="true">${c ? (c.emoji || esc((c.name[0] || '?').toUpperCase())) : '·'}</span>`;
+
+function purge() {
+  const lim = Date.now() - 90 * 864e5;
+  for (const c of ['cats', 'tasks', 'weeks', 'days']) for (const [k, x] of Object.entries(D[c])) if (x.del && x.u < lim) delete D[c][k];
+}
+function save() {
+  purge();
+  try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) { toast('Не удалось сохранить: ' + e.message); }
+  queueSync();
+}
+function merge(into, other) {
+  let changed = false;
+  for (const c of ['cats', 'tasks', 'weeks', 'days']) {
+    const a = into[c], b = (other && other[c]) || {};
+    for (const [k, x] of Object.entries(b)) if (!a[k] || (x.u || 0) > (a[k].u || 0)) { a[k] = x; changed = true; }
+  }
+  if (other && other.tpl && (other.tpl.u || 0) > (into.tpl.u || 0)) { into.tpl = other.tpl; changed = true; }
+  return changed;
+}
+
+/* ---------- дни и план ---------- */
+const dayRec = s => { const r = D.days[s]; return r && !r.del ? r : null; };
+const kindOf = s => (dayRec(s) && dayRec(s).kind) || D.tpl.kinds[wdIdx(s)] || 'normal';
+const skipped = s => !!(dayRec(s) && dayRec(s).skip);
+function setDay(s, patch) {
+  const r = Object.assign({ id: s, kind: kindOf(s), skip: skipped(s) }, dayRec(s) || {}, patch, { del: false });
+  D.days[s] = touch(r); save();
+}
+const planOf = ws => { const r = D.weeks[ws]; return r && !r.del ? r.plan || {} : {}; };
+function setPlan(ws, cat, min) {
+  const plan = { ...planOf(ws) };
+  if (min > 0) plan[cat] = min; else delete plan[cat];
+  D.weeks[ws] = touch({ id: ws, plan }); save();
+}
+// сколько секунд по плану положено на каждую категорию в каждый день недели.
+// Пропущенный день свою долю сохраняет: она уходит в недобор, а не размазывается по другим дням.
+function targets(ws) {
+  const days = weekDays(ws), w = days.map(d => W[kindOf(d)] ?? 1), sum = w.reduce((a, b) => a + b, 0), plan = planOf(ws), out = {};
+  days.forEach((d, i) => { out[d] = {}; for (const [c, m] of Object.entries(plan)) if (catById(c)) out[d][c] = sum ? m * 60 * w[i] / sum : 0; });
+  return out;
+}
+
+/* ---------- время ---------- */
+// разрезает отрезок [start, end) по полуночам: {дата: секунды}
+function spanByDay(start, end) {
+  const out = {}; let a = start;
+  while (a < end) {
+    const d = new Date(a), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime(), b = Math.min(end, next);
+    out[iso(d)] = (out[iso(d)] || 0) + (b - a) / 1000; a = b;
+  }
+  return out;
+}
+const runningTask = () => live('tasks').find(t => t.run);
+const taskSecOn = (t, day) => ((t.log && t.log[day]) || 0) + (t.run ? spanByDay(t.run, Date.now())[day] || 0 : 0);
+const taskTotal = t => Object.values(t.log || {}).reduce((a, b) => a + b, 0) + (t.run ? (Date.now() - t.run) / 1000 : 0);
+function facts(days) { // {дата: {категория|'none': секунды}}
+  const out = {}; days.forEach(d => { out[d] = {}; });
+  for (const t of live('tasks')) {
+    const c = catById(t.cat) ? t.cat : 'none';
+    const add = (d, s) => { if (out[d] && s > 0) out[d][c] = (out[d][c] || 0) + s; };
+    for (const [d, s] of Object.entries(t.log || {})) add(d, s);
+    if (t.run) for (const [d, s] of Object.entries(spanByDay(t.run, Date.now()))) add(d, s);
+  }
+  return out;
+}
+function stopTimer(t) {
+  if (!t.run) return;
+  const log = { ...(t.log || {}) };
+  for (const [d, s] of Object.entries(spanByDay(t.run, Date.now()))) log[d] = Math.round((log[d] || 0) + s);
+  t.log = log; t.run = 0; touch(t);
+}
+function toggleTimer(id) {
+  const t = D.tasks[id]; if (!t) return;
+  if (t.run) stopTimer(t);
+  else { live('tasks').forEach(x => x.run && stopTimer(x)); t.run = Date.now(); touch(t); }
+  save(); render();
+}
+
+/* ================= интерфейс ================= */
+const V = { tab: 'day', day: today(), week: weekStart(today()), sel: null, editCat: null, followToday: true };
+{ const h = location.hash.slice(1); if (['day', 'week', 'cats', 'set'].includes(h)) V.tab = h; }
+
+const catOpts = sel => `<option value="">Без категории</option>` + cats().map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc((c.emoji ? c.emoji + ' ' : '') + c.name)}</option>`).join('');
+
+function planRow(c, fact, target, extra) {
+  const w = target ? Math.min(100, fact / target * 100) : (fact ? 100 : 0);
+  return `<div class="prow" style="--cc:var(--${catColor(c)})">
+    <div class="pname">${catDot(c)}<span>${c ? esc(c.name) : 'Без категории'}</span></div>
+    <div class="pnum">${extra || ''}<b>${hmm(fact)}</b>${target ? ` <span class="mute">/ ${hmm(target)}</span>` : ''}</div>
+    <div class="pbar"><i style="width:${w}%${target ? '' : ';opacity:.45'}"></i></div>
+  </div>`;
+}
+
+function taskHTML(t, day, tail) {
+  const c = catById(t.cat), sec = taskSecOn(t, day), total = taskTotal(t);
+  const meta = [c ? (c.emoji ? c.emoji + ' ' : '') + c.name : 'Без категории'];
+  if (tail) meta.push('с ' + fmtShort(t.day));
+  if (total - sec > 59) meta.push('всего ' + hm(total));
+  return `<li class="task${t.done ? ' done' : ''}" style="--cc:var(--${catColor(c)})" data-id="${t.id}">
+    <button class="chk" type="button" data-act="done" aria-pressed="${!!t.done}" aria-label="${t.done ? 'Снять отметку' : 'Отметить выполненной'}">${t.done ? '✓' : ''}</button>
+    <button class="body" type="button" data-act="edit"><span class="title">${esc(t.title)}</span><span class="meta">${esc(meta.join(' · '))}</span></button>
+    ${tail ? `<button class="ghost" type="button" data-act="totoday">На сегодня</button>`
+           : `<button class="timer${t.run ? ' run' : ''}" type="button" data-act="timer" aria-label="${t.run ? 'Остановить таймер' : 'Запустить таймер'}">${t.run ? '❚❚' : '▶'} <span data-live="${t.id}" data-day="${day}">${clock(sec)}</span></button>`}
+  </li>`;
+}
+
+/* ---------- День ---------- */
+function renderDay() {
+  const d = V.day, td = today(), ws = weekStart(d), tg = targets(ws)[d], f = facts([d])[d], k = kindOf(d), sk = skipped(d);
+  const hasPlan = Object.keys(planOf(ws)).some(catById);
+  const ids = new Set([...Object.keys(tg).filter(c => tg[c] > 0), ...Object.keys(f)]);
+  const list = cats().filter(c => ids.has(c.id));
+  let rows = list.map(c => planRow(c, f[c.id] || 0, tg[c.id] || 0)).join('');
+  if (f.none) rows += planRow(null, f.none, 0);
+  const sumT = Object.values(tg).reduce((a, b) => a + b, 0), sumF = Object.values(f).reduce((a, b) => a + b, 0);
+
+  const tasks = live('tasks').filter(t => t.day === d).sort((a, b) => (a.done - b.done) || (a.created || 0) - (b.created || 0));
+  const tails = d === td ? live('tasks').filter(t => t.day < td && !t.done).sort((a, b) => a.day < b.day ? -1 : 1) : [];
+  const title = d === td ? 'Сегодня' : d === addDays(td, -1) ? 'Вчера' : d === addDays(td, 1) ? 'Завтра' : WD[wdIdx(d)] + ', ' + fmtShort(d);
+
+  return `
+  <div class="head">
+    <h1 class="grow">${title}</h1>
+    <button class="ghost" type="button" data-act="dtoday"${d === td ? ' hidden' : ''}>Сегодня</button>
+    <button class="icon" type="button" data-act="dprev" aria-label="Предыдущий день">‹</button>
+    <button class="icon" type="button" data-act="dnext" aria-label="Следующий день">›</button>
+  </div>
+  <p class="date">${fmtLong(d)}</p>
+  <div class="row" style="margin-top:12px">
+    <div class="seg" role="group" aria-label="Тип дня">${['main', 'normal', 'off'].map(x => `<button type="button" data-act="kind" data-k="${x}" aria-pressed="${k === x}">${KN[x]}</button>`).join('')}</div>
+    <button class="chip skip" type="button" data-act="skip" aria-pressed="${sk}">${sk ? '✕ Пропущен' : 'Отметить пропуск'}</button>
+  </div>
+  ${sk ? `<p class="note warn">День отмечен пропущенным. Его план не переносится на другие дни и считается недобором.</p>` : ''}
+
+  <section class="card">
+    <div class="card-h"><h2>План на день</h2>${sumT ? `<span class="mute sm">${hmm(sumF)} из ${hmm(sumT)}</span>` : sumF ? `<span class="mute sm">сделано ${hmm(sumF)}</span>` : ''}</div>
+    ${!hasPlan ? `<p class="empty">На эту неделю план не задан. <button class="link" type="button" data-act="goweek">Задать план</button></p>`
+      : k === 'off' && !rows ? `<p class="empty">Выходной: по плану сегодня ничего.</p>`
+      : rows || `<p class="empty">На этот день по плану ничего.</p>`}
+  </section>
+
+  <section class="card">
+    <h2>Задачи</h2>
+    <form class="add" data-form="task">
+      <input type="text" name="title" placeholder="Например: Present Simple, MEX/XOR" maxlength="140" required autocomplete="off" aria-label="Новая задача">
+      <select name="cat" aria-label="Категория">${catOpts(S.lastCat)}</select>
+      <button class="primary" type="submit">Добавить</button>
+    </form>
+    ${tasks.length ? `<ul class="tasks">${tasks.map(t => taskHTML(t, d)).join('')}</ul>` : `<p class="empty">Задач на этот день нет.</p>`}
+    ${tails.length ? `<h3>Не сделано раньше</h3><ul class="tasks">${tails.map(t => taskHTML(t, d, true)).join('')}</ul>` : ''}
+  </section>`;
+}
+
+/* ---------- Неделя ---------- */
+function renderWeek() {
+  const ws = V.week, td = today(), days = weekDays(ws), tg = targets(ws), f = facts(days), plan = planOf(ws);
+  const past = days.filter(d => d < td);
+  const sum = (o, c) => days.reduce((a, d) => a + (o[d][c] || 0), 0);
+  const sumPast = c => past.reduce((a, d) => a + (tg[d][c] || 0), 0);
+  const prevPlan = planOf(addDays(ws, -7));
+  const isCur = ws === weekStart(td);
+
+  const strip = days.map((d, i) => {
+    const k = kindOf(d), tot = Object.values(f[d]).reduce((a, b) => a + b, 0);
+    const cls = ['dcell', k, skipped(d) ? 'skip' : '', d === td ? 'today' : ''].join(' ');
+    return `<button type="button" class="${cls}" data-act="sel" data-d="${d}" aria-pressed="${V.sel === d}" aria-label="${fmtLong(d)}, ${KN[k]}${skipped(d) ? ', пропущен' : ''}">
+      <span class="wd">${WD[i]}</span><span class="dn">${parse(d).getDate()}</span>
+      <span class="k">${skipped(d) ? 'пропуск' : k === 'main' ? '★' : k === 'off' ? 'вых' : ''}</span>
+      <span class="f">${tot >= 60 ? hmm(tot) : ''}</span></button>`;
+  }).join('');
+
+  const sel = days.includes(V.sel) ? V.sel : null;
+  const daybar = sel ? `<div class="daybar">
+      <b style="min-width:60px">${WD[wdIdx(sel)]}, ${fmtShort(sel)}</b>
+      <div class="seg" role="group" aria-label="Тип дня">${['main', 'normal', 'off'].map(x => `<button type="button" data-act="kind" data-k="${x}" data-d="${sel}" aria-pressed="${kindOf(sel) === x}">${KN[x]}</button>`).join('')}</div>
+      <button class="chip skip" type="button" data-act="skip" data-d="${sel}" aria-pressed="${skipped(sel)}">${skipped(sel) ? '✕ Пропущен' : 'Пропуск'}</button>
+      <button class="link" type="button" data-act="openday" data-d="${sel}">Открыть день →</button>
+    </div>` : `<p class="mute sm" style="margin-top:8px">Нажми на день, чтобы сделать его главным, выходным или отметить пропуск.</p>`;
+
+  // строки плана: все категории (план можно задать любой)
+  let totPlan = 0, totFact = 0, totDef = 0;
+  const rows = cats().map(c => {
+    const p = (plan[c.id] || 0) * 60, fa = sum(f, c.id), tp = sumPast(c.id), def = tp - fa;
+    totPlan += p; totFact += fa; if (p && def > 0) totDef += def;
+    const w = p ? Math.min(100, fa / p * 100) : (fa ? 100 : 0), mk = p && tp ? Math.min(100, tp / p * 100) : null;
+    const status = !p ? (fa ? 'вне плана' : '') : fa >= p ? '<span class="good">план выполнен</span>'
+      : def > 60 ? `<span class="bad">недобор ${hmm(def)}</span>` : def < -60 ? `<span class="good">опережаешь на ${hmm(-def)}</span>` : (past.length ? '<span class="good">в графике</span>' : '');
+    return `<div class="prow" style="--cc:var(--${c.color})">
+      <div class="pname">${catDot(c)}<span>${esc(c.name)}</span></div>
+      <label class="hrs"><input type="text" inputmode="decimal" data-plan="${c.id}" value="${p ? hoursStr(p / 60) : ''}" placeholder="0" aria-label="Часов на ${esc(c.name)}"><span class="mute sm">ч</span></label>
+      <div class="pbar"><i style="width:${w}%"></i>${mk !== null ? `<b style="left:${mk}%"></b>` : ''}</div>
+      <div class="pmeta"><span>сделано ${hmm(fa)}${p ? ' из ' + hmm(p) : ''}</span><span>${status}</span></div>
+    </div>`;
+  }).join('');
+  const noneFact = sum(f, 'none'); totFact += noneFact;
+
+  // таблица по дням
+  const shown = cats().filter(c => plan[c.id] || sum(f, c.id));
+  const cell = (d, c) => {
+    const fv = f[d][c] || 0, tv = c === 'none' ? 0 : tg[d][c] || 0;
+    if (!fv && !tv) return `<td class="${kindOf(d) === 'off' ? 'offd' : 'mute'}">·</td>`;
+    const cls = tv && fv >= tv - 60 ? 'ok' : tv && (d < td || skipped(d)) ? 'miss' : '';
+    return `<td class="${cls}"><b>${fv ? hmm(fv) : '—'}</b>${tv ? `<small>${hmm(tv)}</small>` : ''}</td>`;
+  };
+  const table = shown.length || noneFact ? `<div class="gwrap"><table class="g">
+      <thead><tr><th></th>${days.map((d, i) => `<th class="${skipped(d) ? 'skip' : kindOf(d) === 'main' ? 'main' : ''}">${WD[i]}<br>${parse(d).getDate()}</th>`).join('')}</tr></thead>
+      <tbody>${shown.map(c => `<tr><td>${esc((c.emoji ? c.emoji + ' ' : '') + c.name)}</td>${days.map(d => cell(d, c.id)).join('')}</tr>`).join('')}
+      ${noneFact ? `<tr><td>Без категории</td>${days.map(d => cell(d, 'none')).join('')}</tr>` : ''}</tbody>
+      <tfoot><tr><td>Всего</td>${days.map(d => { const v = Object.values(f[d]).reduce((a, b) => a + b, 0); return `<td>${v >= 60 ? hmm(v) : '·'}</td>`; }).join('')}</tr></tfoot>
+    </table></div>
+    <div class="legend"><span>верхнее число — сделано</span><span>нижнее — по плану</span><span class="bad">красным — недобор</span></div>` : `<p class="empty">Пока пусто.</p>`;
+
+  const nSkip = days.filter(skipped).length;
+  return `
+  <div class="head">
+    <h1 class="grow">Неделя</h1>
+    <button class="ghost" type="button" data-act="wnow"${isCur ? ' hidden' : ''}>Эта неделя</button>
+    <button class="icon" type="button" data-act="wprev" aria-label="Предыдущая неделя">‹</button>
+    <button class="icon" type="button" data-act="wnext" aria-label="Следующая неделя">›</button>
+  </div>
+  <p class="date">${fmtShort(ws)} — ${fmtShort(addDays(ws, 6))}${nSkip ? ` · пропусков: ${nSkip}` : ''}</p>
+  <div class="strip">${strip}</div>
+  ${daybar}
+
+  <section class="card">
+    <div class="stats">
+      <div><b>${hmm(totPlan)}</b><span>по плану</span></div>
+      <div><b>${hmm(totFact)}</b><span>сделано</span></div>
+      <div><b class="${totDef > 60 ? 'bad' : ''}">${hmm(totDef)}</b><span>недобор на сегодня</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2>План на неделю</h2>${Object.keys(prevPlan).length && !Object.keys(plan).length ? `<button class="ghost" type="button" data-act="copyplan">Как на прошлой неделе</button>` : ''}</div>
+    <p class="mute sm">Сколько часов хочешь отдать каждой категории. Главный день получает вдвое больше времени, выходной — ноль.</p>
+    ${cats().length ? rows : `<p class="empty">Сначала создай категории. <button class="link" type="button" data-act="gocats">Категории →</button></p>`}
+    ${cats().length ? `<div class="legend"><span><i class="mk"></i>сколько должно быть сделано к сегодняшнему дню</span></div>` : ''}
+  </section>
+
+  <section class="card">
+    <h2>По дням</h2>
+    ${table}
+  </section>`;
+}
+
+/* ---------- Категории ---------- */
+function renderCats() {
+  const ws = weekStart(today()), days = weekDays(ws), f = facts(days), plan = planOf(ws);
+  const wk = id => days.reduce((a, d) => a + (f[d][id] || 0), 0);
+  const list = cats().map(c => {
+    const open = V.editCat === c.id, nT = live('tasks').filter(t => t.cat === c.id).length;
+    return `<div class="crow" style="--cc:var(--${c.color})">${catDot(c)}<b>${esc(c.name)}</b>
+        <span class="mute sm">${hmm(wk(c.id))}${plan[c.id] ? ' / ' + hmm(plan[c.id] * 60) : ''}</span>
+        <button class="ghost" type="button" data-act="cedit" data-id="${c.id}" aria-expanded="${open}">${open ? 'Готово' : 'Изменить'}</button></div>
+      ${open ? `<div class="cedit">
+        <input type="text" data-cname="${c.id}" value="${esc(c.name)}" maxlength="60" aria-label="Название">
+        <div class="swatches" role="group" aria-label="Цвет">${SLOTS.map(s => `<button type="button" class="sw" style="--cc:var(--${s})" data-act="ccolor" data-id="${c.id}" data-v="${s}" aria-pressed="${c.color === s}" aria-label="Цвет ${s.slice(1)}"></button>`).join('')}</div>
+        <div class="emojis" role="group" aria-label="Значок"><button type="button" class="emo" data-act="cemoji" data-id="${c.id}" data-v="" aria-pressed="${!c.emoji}" aria-label="Первая буква">Аа</button>${EMOJI.map(e => `<button type="button" class="emo" data-act="cemoji" data-id="${c.id}" data-v="${e}" aria-pressed="${c.emoji === e}">${e}</button>`).join('')}</div>
+        <div class="row"><span class="mute sm grow">Задач: ${nT}</span><button class="secondary danger" type="button" data-act="cdel" data-id="${c.id}">Удалить категорию</button></div>
+      </div>` : ''}`;
+  }).join('');
+  return `
+  <div class="head"><h1 class="grow">Категории</h1></div>
+  <p class="date">Глобальные темы: к ним привязываются задачи и план недели</p>
+  <section class="card">
+    ${list || '<p class="empty">Категорий пока нет.</p>'}
+    <form class="add" data-form="cat" style="margin-top:12px">
+      <input type="text" name="name" placeholder="Новая категория, например «Матан»" maxlength="60" required autocomplete="off" aria-label="Новая категория">
+      <button class="primary" type="submit">Создать</button>
+    </form>
+  </section>`;
+}
+
+/* ---------- Настройки ---------- */
+function syncText() {
+  if (!S.token) return 'Выключена. Данные хранятся только в этом браузере.';
+  if (syncState === 'busy') return 'Синхронизирую…';
+  if (syncState === 'err') return 'Ошибка: ' + syncMsg;
+  return S.last ? 'Последняя синхронизация: ' + new Date(S.last).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Ещё не синхронизировано';
+}
+function renderSet() {
+  return `
+  <div class="head"><h1 class="grow">Настройки</h1></div>
+  <section class="card">
+    <div class="card-h"><h2>Тема</h2>
+      <div class="seg" role="group" aria-label="Тема">${[['system', 'Авто'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([v, n]) => `<button type="button" data-act="theme" data-v="${v}" aria-pressed="${S.theme === v}">${n}</button>`).join('')}</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Обычная неделя</h2>
+    <p class="mute sm">Такими дни будут по умолчанию. Конкретный день всегда можно поменять на вкладке «Неделя». Нажимай, чтобы переключать: обычный → главный → выходной.</p>
+    <div class="tpl">${D.tpl.kinds.map((k, i) => `<button type="button" class="${k}" data-act="tpl" data-i="${i}"><b>${WD[i]}</b>${k === 'main' ? '★' : k === 'off' ? 'вых' : 'обыч'}</button>`).join('')}</div>
+  </section>
+
+  <section class="card">
+    <h2>Синхронизация ноутбука и телефона</h2>
+    <p class="sm" id="syncStatus">${esc(syncText())}</p>
+    ${S.token ? `
+      <div class="row" style="margin-top:12px">
+        <button class="primary" type="button" data-act="syncnow">Синхронизировать</button>
+        <button class="secondary" type="button" data-act="syncoff">Отключить на этом устройстве</button>
+      </div>
+      ${S.gist ? `<p class="mute sm" style="margin-top:10px">Данные лежат в секретном gist <code>${esc(S.gist.slice(0, 8))}…</code> на твоём GitHub.</p>` : ''}`
+    : `
+      <p class="mute sm" style="margin-top:8px">Без сервера: данные сохраняются в секретный gist на твоём GitHub. Обе копии склеиваются, побеждает более свежее изменение.</p>
+      <ol class="help">
+        <li>GitHub → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token.</li>
+        <li>Repository access: <b>Public repositories</b>. Permissions → Account → <b>Gists: Read and write</b>. Больше ничего не добавляй.</li>
+        <li>Вставь токен ниже. На втором устройстве вставь тот же токен: оно само найдёт данные.</li>
+      </ol>
+      <label class="field">Токен GitHub<input type="password" id="tokenIn" autocomplete="off" placeholder="github_pat_…"></label>
+      <div class="row" style="margin-top:10px"><button class="primary" type="button" data-act="syncon">Включить</button></div>
+      <p class="mute sm" style="margin-top:10px">Секретный gist не виден в профиле и поиске, но открывается по прямой ссылке. Паролей в задачах не храни.</p>`}
+  </section>
+
+  <section class="card">
+    <h2>Данные</h2>
+    <p class="mute sm">Резервная копия файлом. Импорт не стирает текущие данные, а добавляет к ним.</p>
+    <div class="row" style="margin-top:10px">
+      <button class="secondary" type="button" data-act="export">Скачать копию</button>
+      <button class="secondary" type="button" data-act="import">Загрузить из файла</button>
+      <span class="grow"></span>
+      <button class="secondary danger" type="button" data-act="wipe">Удалить всё</button>
+    </div>
+  </section>
+  <p class="mute sm" style="margin:16px 4px 0">На iPhone открой сайт в Safari → «Поделиться» → «На экран «Домой»» и пользуйся с иконки.</p>`;
+}
+
+/* ---------- общий рендер ---------- */
+function renderTop() {
+  const r = runningTask(), chip = $('#runChip');
+  if (r) {
+    chip.hidden = false;
+    chip.innerHTML = `❚❚ <span class="t">${esc(r.title)}</span> <span class="n" id="runTime">${clock((Date.now() - r.run) / 1000)}</span>`;
+    chip.setAttribute('aria-label', 'Остановить таймер: ' + r.title);
+  } else chip.hidden = true;
+  const b = $('#syncBtn');
+  b.className = 'sync ' + (S.token ? syncState : '');
+  b.title = syncText();
+}
+function render() {
+  const html = V.tab === 'week' ? renderWeek() : V.tab === 'cats' ? renderCats() : V.tab === 'set' ? renderSet() : renderDay();
+  $('#view').innerHTML = html;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === V.tab ? 'page' : 'false'));
+  renderTop();
+}
+function go(tab) { V.tab = tab; history.replaceState(null, '', '#' + tab); render(); window.scrollTo(0, 0); }
+function applyTheme() { if (S.theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = S.theme; }
+
+let toastT = 0;
+function toast(msg, undo) {
+  const el = $('#toast');
+  el.innerHTML = `<span>${esc(msg)}</span>` + (undo ? '<button type="button">Вернуть</button>' : '');
+  el.hidden = false;
+  if (undo) el.querySelector('button').onclick = () => { undo(); el.hidden = true; };
+  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, undo ? 6000 : 3000);
+}
+
+/* ================= действия ================= */
+$('.tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) go(b.dataset.tab); });
+$('#runChip').addEventListener('click', () => { const r = runningTask(); if (r) toggleTimer(r.id); });
+$('#syncBtn').addEventListener('click', () => { if (S.token) sync(); go('set'); });
+
+const view = $('#view');
+view.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, li = b.closest('[data-id]'), id = b.dataset.id || (li && li.dataset.id), t = id && D.tasks[id];
+  switch (act) {
+    // день
+    case 'dprev': V.day = addDays(V.day, -1); V.followToday = false; return render();
+    case 'dnext': V.day = addDays(V.day, 1); V.followToday = false; return render();
+    case 'dtoday': V.day = today(); V.followToday = true; return render();
+    case 'kind': setDay(b.dataset.d || V.day, { kind: b.dataset.k }); return render();
+    case 'skip': { const d = b.dataset.d || V.day; setDay(d, { skip: !skipped(d) }); return render(); }
+    case 'goweek': V.week = weekStart(V.day); return go('week');
+    case 'gocats': return go('cats');
+    case 'timer': return toggleTimer(id);
+    case 'done':
+      if (!t) return;
+      t.done = !t.done; t.doneDay = t.done ? today() : null;
+      if (t.done) stopTimer(t);
+      touch(t); save(); return render();
+    case 'totoday': if (t) { t.day = today(); touch(t); save(); render(); } return;
+    case 'edit': return t && openTask(t);
+    // неделя
+    case 'wprev': V.week = addDays(V.week, -7); V.sel = null; return render();
+    case 'wnext': V.week = addDays(V.week, 7); V.sel = null; return render();
+    case 'wnow': V.week = weekStart(today()); V.sel = null; return render();
+    case 'sel': V.sel = V.sel === b.dataset.d ? null : b.dataset.d; return render();
+    case 'openday': V.day = b.dataset.d; V.followToday = V.day === today(); return go('day');
+    case 'copyplan': D.weeks[V.week] = touch({ id: V.week, plan: { ...planOf(addDays(V.week, -7)) } }); save(); return render();
+    // категории
+    case 'cedit': V.editCat = V.editCat === id ? null : id; return render();
+    case 'ccolor': { const c = D.cats[id]; c.color = b.dataset.v; touch(c); save(); return render(); }
+    case 'cemoji': { const c = D.cats[id]; c.emoji = b.dataset.v; touch(c); save(); return render(); }
+    case 'cdel': {
+      const c = D.cats[id], n = live('tasks').filter(x => x.cat === id).length;
+      if (!confirm(`Удалить «${c.name}»?${n ? ` ${n} задач останутся без категории.` : ''}`)) return;
+      c.del = true; touch(c); V.editCat = null; save(); render();
+      return toast('Категория удалена', () => { c.del = false; touch(c); save(); render(); });
+    }
+    // настройки
+    case 'theme': S.theme = b.dataset.v; saveS(); applyTheme(); return render();
+    case 'tpl': {
+      const i = +b.dataset.i, order = ['normal', 'main', 'off'];
+      const kinds = D.tpl.kinds.slice(); kinds[i] = order[(order.indexOf(kinds[i]) + 1) % 3];
+      D.tpl = touch({ kinds }); save(); return render();
+    }
+    case 'syncon': {
+      const v = $('#tokenIn').value.trim();
+      if (!v) return toast('Вставь токен');
+      S.token = v; S.gist = ''; saveS(); render(); return sync();
+    }
+    case 'syncnow': return sync();
+    case 'syncoff':
+      if (!confirm('Отключить синхронизацию на этом устройстве? Данные здесь и в gist останутся.')) return;
+      S.token = ''; S.gist = ''; S.last = 0; saveS(); syncState = 'off'; return render();
+    case 'export': {
+      const blob = new Blob([JSON.stringify(D, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `every-day-${today()}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      return;
+    }
+    case 'import': return $('#importFile').click();
+    case 'wipe': {
+      if (!confirm('Удалить все задачи, категории и планы? Если включена синхронизация, удаление дойдёт и до другого устройства.')) return;
+      const now = Date.now();
+      for (const c of ['cats', 'tasks', 'weeks', 'days']) for (const x of Object.values(D[c])) { x.del = true; x.u = now; }
+      save(); render(); return toast('Всё удалено');
+    }
+  }
+});
+
+view.addEventListener('submit', e => {
+  const form = e.target.closest('form[data-form]'); if (!form) return;
+  e.preventDefault();
+  if (form.dataset.form === 'task') {
+    const title = form.title.value.trim(); if (!title) return;
+    const cat = form.cat.value || '';
+    const t = touch({ id: uid(), title, cat, day: V.day, done: false, log: {}, run: 0, created: Date.now() });
+    D.tasks[t.id] = t; S.lastCat = cat; saveS(); save(); render();
+    const inp = view.querySelector('form[data-form="task"] input[name="title"]'); if (inp) inp.focus();
+  } else if (form.dataset.form === 'cat') {
+    const name = form.name.value.trim(); if (!name) return;
+    const used = new Set(cats().map(c => c.color));
+    const c = touch({ id: uid(), name, color: SLOTS.find(s => !used.has(s)) || SLOTS[cats().length % SLOTS.length], emoji: '', order: Date.now() });
+    D.cats[c.id] = c; save(); render();
+  }
+});
+
+view.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.plan) {
+    const v = parseFloat(el.value.replace(',', '.'));
+    if (el.value.trim() && (!isFinite(v) || v < 0 || v > 168)) { toast('Введи число часов от 0 до 168'); return render(); }
+    setPlan(V.week, el.dataset.plan, Math.round((v || 0) * 60));
+    return render();
+  }
+  if (el.dataset.cname) {
+    const c = D.cats[el.dataset.cname], v = el.value.trim();
+    if (v && v !== c.name) { c.name = v; touch(c); save(); }
+    return render();
+  }
+});
+view.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.plan) e.target.blur(); });
+
+$('#importFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try {
+    const x = JSON.parse(await file.text());
+    if (!x || x.v !== 2) throw new Error('это не файл Every Day');
+    merge(D, x); save(); render(); toast('Загружено');
+  } catch (err) { toast('Не получилось: ' + err.message); }
+});
+
+/* ---------- окно задачи ---------- */
+const dlg = $('#dlg'), dform = $('#dlgForm');
+let dTask = null, dMin0 = 0;
+function openTask(t) {
+  dTask = t;
+  dform.title.value = t.title;
+  dform.cat.innerHTML = catOpts(t.cat);
+  dform.day.value = t.day;
+  dMin0 = Math.round(((t.log && t.log[V.day]) || 0) / 60);
+  dform.min.value = dMin0 || '';
+  dform.min.placeholder = '0';
+  $('#dlgMinLbl').textContent = `Время за ${V.day === today() ? 'сегодня' : fmtShort(V.day)}, минут`;
+  $('#dlgInfo').textContent = (t.run ? 'Таймер идёт: текущий отрезок добавится, когда остановишь. ' : '') + 'Всего по задаче: ' + hm(taskTotal(t));
+  dlg.showModal();
+}
+dlg.addEventListener('close', () => {
+  const t = dTask; dTask = null;
+  if (!t) return;
+  if (dlg.returnValue === 'del') {
+    t.del = true; if (t.run) t.run = 0; touch(t); save(); render();
+    return toast('Задача удалена', () => { t.del = false; touch(t); save(); render(); });
+  }
+  if (dlg.returnValue !== 'save') return;
+  t.title = dform.title.value.trim() || t.title;
+  t.cat = dform.cat.value || '';
+  if (dform.day.value) t.day = dform.day.value;
+  const m = parseInt(dform.min.value, 10) || 0;
+  if (m !== dMin0 && m >= 0) { t.log = { ...(t.log || {}) }; if (m) t.log[V.day] = m * 60; else delete t.log[V.day]; }
+  touch(t); save(); render();
+});
+
+/* ================= синхронизация через GitHub Gist ================= */
+let syncState = 'off', syncMsg = '', syncTimer = 0, syncing = false, again = false;
+function setSync(st, msg) { syncState = st; syncMsg = msg || ''; renderTop(); const el = $('#syncStatus'); if (el) el.textContent = syncText(); }
+function queueSync() { if (!S.token) return; clearTimeout(syncTimer); syncTimer = setTimeout(sync, 2500); }
+async function gh(path, opt = {}) {
+  const r = await fetch('https://api.github.com' + path, {
+    ...opt, cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + S.token, Accept: 'application/vnd.github+json', ...(opt.body ? { 'Content-Type': 'application/json' } : {}) }
+  });
+  if (!r.ok) {
+    const e = new Error(r.status === 401 ? 'GitHub не принял токен (401). Проверь, что он скопирован целиком и не истёк.'
+      : r.status === 403 || r.status === 404 && !path.startsWith('/gists/') ? 'Нет доступа (' + r.status + '). Токену нужно право Gists: Read and write.'
+      : 'GitHub ответил ' + r.status);
+    e.status = r.status; throw e;
+  }
+  return r.json();
+}
+async function readGist(g) {
+  const f = g && g.files && g.files[FILE]; if (!f) return null;
+  const txt = f.truncated ? await (await fetch(f.raw_url, { cache: 'no-store' })).text() : f.content;
+  const x = JSON.parse(txt); return x && x.v === 2 ? x : null;
+}
+async function sync() {
+  if (!S.token) return;
+  if (syncing) { again = true; return; }
+  if (!navigator.onLine) return setSync('err', 'нет интернета');
+  syncing = true; setSync('busy');
+  try {
+    let g = null;
+    if (S.gist) { try { g = await gh('/gists/' + S.gist); } catch (e) { if (e.status === 404) { S.gist = ''; saveS(); } else throw e; } }
+    if (!S.gist) { // ищем уже созданный gist (например, на другом устройстве)
+      const list = await gh('/gists?per_page=100');
+      const hit = list.find(x => x.files && x.files[FILE]);
+      if (hit) { g = await gh('/gists/' + hit.id); S.gist = hit.id; saveS(); }
+    }
+    const remote = await readGist(g);
+    const before = JSON.stringify(D);
+    if (remote) merge(D, remote);
+    if (JSON.stringify(D) !== before) {
+      localStorage.setItem(KEY, JSON.stringify(D));
+      if (!isEditing()) render();
+    }
+    const needPush = !remote || merge(clone(remote), D);
+    if (needPush) {
+      const files = { [FILE]: { content: JSON.stringify(D) } };
+      if (S.gist) await gh('/gists/' + S.gist, { method: 'PATCH', body: JSON.stringify({ files }) });
+      else { const ng = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'Every Day — данные приложения', public: false, files }) }); S.gist = ng.id; }
+    }
+    S.last = Date.now(); saveS(); setSync('ok');
+    if (V.tab === 'set' && !isEditing()) render();
+  } catch (e) {
+    setSync('err', e.message || String(e));
+  } finally {
+    syncing = false;
+    if (again) { again = false; queueSync(); }
+  }
+}
+
+/* ================= запуск ================= */
+const isEditing = () => dlg.open || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+let tick = 0;
+setInterval(() => {
+  document.querySelectorAll('[data-live]').forEach(el => { const t = D.tasks[el.dataset.live]; if (t) el.textContent = clock(taskSecOn(t, el.dataset.day)); });
+  const r = runningTask(), rt = $('#runTime');
+  if (r && rt) rt.textContent = clock((Date.now() - r.run) / 1000);
+  if (r && ++tick % 30 === 0 && !isEditing()) render(); // раз в 30 с обновляем полоски плана
+}, 1000);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  const fresh = (() => { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } })();
+  if (fresh && fresh.v === 2) merge(D, fresh); // если правили в другой вкладке
+  if (V.followToday) V.day = today();
+  if (!isEditing()) render();
+  sync();
+});
+window.addEventListener('online', () => sync());
+setInterval(() => { if (document.visibilityState === 'visible') sync(); }, 120000);
+
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+applyTheme();
+if (!localStorage.getItem(KEY)) localStorage.setItem(KEY, JSON.stringify(D));
+render();
+sync();
+})();
+</script>
+</body>
+</html>
