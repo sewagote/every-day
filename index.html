@@ -619,13 +619,16 @@ const GUARD_MS = 3 * 3600e3;              // через сколько спра�
 const blank = () => ({ v: 2, cats: {}, tasks: {}, weeks: {}, days: {}, logs: {}, recur: {}, tpl: { kinds: ['normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'off'], u: 0 }, ap: { total: 0, w: [1, 2, 3], cats: {}, u: 0 } });
 function load() {
   try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.v === 2) return Object.assign(blank(), x); } catch (e) {}
-  const d = blank();
-  // стартовые категории с постоянными id, чтобы на двух устройствах не появилось дублей
-  d.cats['seed-en'] = { id: 'seed-en', name: 'Английский', color: 'c1', emoji: '🗣️', order: 1, u: 1 };
-  d.cats['seed-cp'] = { id: 'seed-cp', name: 'CP', color: 'c2', emoji: '💻', order: 2, u: 1 };
-  return d;
+  return blank(); // категорий по умолчанию нет: пользователь заводит свои
 }
 let D = load();
+// раньше новые пользователи получали «Английский» и «CP». Если их не трогали и ничего к ним не привязано — убираем
+for (const id of ['seed-en', 'seed-cp']) {
+  const c = D.cats[id];
+  if (!c || c.del || c.u !== 1) continue;
+  const used = Object.values(D.tasks).some(t => t.cat === id) || Object.values(D.logs).some(l => l.cat === id) || Object.values(D.recur).some(r => r.cat === id) || Object.values(D.weeks).some(w => w.plan && w.plan[id]);
+  if (!used) { c.del = true; c.u = Date.now(); }
+}
 if (DEMO && !localStorage.getItem(KEY)) D = demoData();
 function demoData() {
   const d = blank(), td = today(), ws = weekStart(td), u = 1000;
@@ -929,7 +932,8 @@ function todayCol() {
     <div class="card-h"><h2>План на день</h2><button class="ghost" type="button" data-act="addtime">+ Время</button></div>
     ${sumT || sumF ? `<div class="wbig" style="margin:2px 0 6px">${ring(sumT ? sumF / sumT : (sumF ? 1 : 0), 'accent', 76, { text: sumT ? pctTxt(sumF, sumT) : hmm(sumF), fs: 18, label: 'Сделано за день' })}
       <div class="facts"><span><b>${hmm(sumF)}</b> <span class="mute">сделано</span></span>${sumT ? `<span class="mute sm">по плану ${hmm(sumT)}${sumT > sumF ? ` · осталось ${hmm(sumT - sumF)}` : ''}</span>` : ''}</div></div>` : ''}
-    ${!hasPlan && !rows ? `<p class="empty">На эту неделю план не задан. <button class="link" type="button" data-act="goweek">Задать план</button></p>`
+    ${!cats().length && !rows ? `<p class="empty">Пока нет ни одной категории. Заведи свои темы — например, английский или матан. <button class="link" type="button" data-act="gocats">Создать категорию</button></p>`
+      : !hasPlan && !rows ? `<p class="empty">На эту неделю план не задан. <button class="link" type="button" data-act="goweek">Задать план</button></p>`
       : rows || `<p class="empty">${k === 'off' ? 'Выходной: по плану сегодня ничего.' : 'На этот день по плану ничего.'}</p>`}
     ${logs.length ? `<h3>Время без задач</h3><ul class="loglist">${logs.map(l => { const c = catById(l.cat); return `<li>${catDot(c)}<span class="grow">${esc(c ? c.name : 'Без категории')}${l.from ? ` <span class="mute sm">${l.from}–${l.to}</span>` : ''}</span><b>${hmm(l.sec)}</b><button class="x" type="button" data-act="logdel" data-id="${l.id}" aria-label="Удалить запись">✕</button></li>`; }).join('')}</ul>` : ''}
   </section>`;
@@ -962,6 +966,7 @@ function weekCol() {
         ${st.over ? `<span class="bad">превышен лимит</span>` : ''}
       </div></div>
       <div class="ringgrid">${cells}</div>`
+    : !cats().length ? `<p class="empty">Сначала создай категории, потом задай на них часы. <button class="link" type="button" data-act="gocats">Категории →</button></p>`
     : `<p class="empty">План на эту неделю не задан. <button class="link" type="button" data-act="goweek">Задать план</button></p>`}
     <div class="strip">${strip}</div>
   </section>`;
@@ -1204,7 +1209,7 @@ function renderCats() {
   <section class="card">
     ${list || '<p class="empty">Категорий пока нет.</p>'}
     <form class="add" data-form="cat" style="margin-top:12px">
-      <input type="text" name="name" placeholder="Новая категория, например «Матан»" maxlength="60" required autocomplete="off" aria-label="Новая категория">
+      <input type="text" name="name" placeholder="Новая категория: Английский, CP, Матан…" maxlength="60" required autocomplete="off" aria-label="Новая категория">
       <button class="primary" type="submit">Создать</button>
     </form>
   </section>`;
