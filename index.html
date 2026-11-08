@@ -171,8 +171,12 @@ input[type=time],input[type=datetime-local]{border:1px solid var(--line2);backgr
 .add{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .add input[type=text]{flex:1 1 200px}
 .add select{flex:1 1 120px;max-width:220px}
-#taskCard .add input[type=text]{flex:1 1 100%}
-#taskCard .add select{flex:1 1 140px;max-width:none}
+.add-task{border:1px solid var(--line2);border-radius:var(--r2);background:var(--card);padding:2px 6px 6px;transition:border-color .15s,box-shadow .15s}
+.add-task:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+.add-task input.add-title{border:0;background:transparent;width:100%;padding:9px 6px;font-size:1rem;color:var(--ink);outline:none;border-radius:0}
+.add-title::placeholder{color:var(--low)}
+.add-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pill-sel{border:1px solid var(--line2);border-radius:999px;padding:4px 10px;font-size:.84rem;background:var(--card);max-width:150px;min-width:0;flex:0 1 auto}
 .tasks{list-style:none;margin:12px 0 0;padding:0;display:grid}
 .task{display:flex;align-items:center;gap:10px;padding:10px 2px 10px 10px;border-top:1px var(--sep) var(--line2);border-left:3px solid var(--cc)}
 .tasks .task:first-child{border-top:0}
@@ -286,33 +290,66 @@ details.faq p{margin-top:6px;font-size:.9rem;color:var(--mute);line-height:1.55}
 .trow label{flex:1}
 
 /* автоплан */
-.ap-total{display:flex;align-items:center;gap:10px}
-.ap-total input[type=range]{flex:1;width:auto;accent-color:var(--accent)}
-.dlg label.hrs{display:flex;flex-direction:row}
-.dlg .hrs input{width:58px}
-.ap-w{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.85rem;color:var(--mute)}
-.dlg .ap-w input{width:46px;text-align:center;padding:6px 4px}
 .ap-wv{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .aprow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 10px;padding:10px 0;border-top:1px var(--sep) var(--line2)}
 .aprow .ctl{grid-column:1/-1;display:flex;gap:8px;align-items:center}
-.dlg .aprow select{width:auto;flex:1;font-size:.9rem;padding:7px 9px}
+.dlg .aprow select{width:auto;flex:1;font-size:.9rem;padding:7px 9px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--card)}
 .aprow .aval{display:flex;align-items:center;gap:6px}
-.dlg .aprow .aval input{width:70px;text-align:right;padding:7px 9px}
+.dlg .aprow .aval input{width:70px;text-align:right;padding:7px 9px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--card)}
 .aprow .ares{font-variant-numeric:tabular-nums;font-size:1.05rem;font-family:var(--head)}
 .pbar{grid-column:1/-1;position:relative;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .pbar i{position:absolute;left:0;top:0;bottom:0;background:var(--cc);border-radius:3px}
 .dlg .chkl{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:.9rem}
 .dlg .chkl input{width:20px;height:20px;flex:none;accent-color:var(--accent)}
-.ap-sum{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;padding-top:8px;border-top:1px solid var(--line)}
 
-/* диалоги, тост, подсказки */
-dialog{border:1px solid var(--line2);border-radius:var(--r2);padding:0;background:var(--card);color:var(--ink);width:min(460px,calc(100vw - 24px));max-height:calc(100vh - 40px);box-shadow:0 20px 50px rgb(40 30 15 / .3)}
+/* диалоги: заголовок как у страницы, свойства строками, подвал с кнопками */
+dialog{border:0;border-radius:calc(var(--r2) + 6px);padding:0;background:var(--card);color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 40px);box-shadow:0 0 0 1px var(--line),0 24px 64px rgb(0 0 0 / .22)}
+dialog.small{width:min(420px,calc(100vw - 24px))}
+dialog.wide{width:min(600px,calc(100vw - 24px))}
 dialog::backdrop{background:rgb(15 15 15 / .62);background:var(--scrim, rgb(15 15 15 / .62))}
-.dlg{padding:20px;display:grid;gap:12px}
-.dlg h2{margin:0}
-.dlg label{display:grid;gap:4px;font-size:.85rem;color:var(--mute)}
-.dlg input,.dlg select{color:var(--ink);font-size:1rem;width:100%}
-.dlg .wdchips button{width:38px}
+.dlg{padding:22px 24px 0;display:grid;gap:12px}
+.dlg-k{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.dlg-h{font-family:var(--head);font-weight:var(--hw);letter-spacing:var(--hls);font-size:1.45rem;line-height:1.2;margin-top:-6px}
+input.dlg-title{border:0;background:transparent;font:var(--hw) 1.5rem/1.25 var(--head);letter-spacing:var(--hls);color:var(--ink);padding:2px 0;margin-top:-6px;width:100%;outline:none}
+.dlg-title::placeholder{color:var(--low)}
+input.dlg-title:focus-visible{outline:none}
+.dlg-msg{font-size:.98rem;line-height:1.5}
+.dlg-note{font-size:.84rem;color:var(--mute);min-height:0}
+.dlg-note:empty{display:none}
+.props{display:grid;gap:2px;border-top:1px solid var(--line);padding-top:8px}
+.prop{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:10px;min-height:38px}
+.prop > label,.prop > .pl{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:.88rem;cursor:default}
+.prop svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.prop input,.prop select{border:1px solid transparent;background:transparent;border-radius:var(--r2);padding:7px 9px;width:100%;min-height:36px;color:var(--ink);font-size:.95rem}
+.prop input:hover,.prop select:hover{background:var(--card2)}
+.prop input:focus,.prop select:focus{outline:none;border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px var(--soft)}
+.pv{display:flex;align-items:center;gap:6px;min-width:0}
+.pv input{width:auto;flex:1;min-width:0}
+.pv input.num,#dMin,#tMin{flex:0 0 76px;text-align:right}
+.pv .unit{color:var(--mute);font-size:.88rem;white-space:nowrap}
+.pv .unit.sm{font-size:.76rem}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:4px 11px;font-size:.84rem;color:var(--ink)}
+.pill:hover{background:var(--card2)}
+.pill[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent-ink)}
+.prop .wdchips{gap:4px}
+.prop .wdchips button{width:36px;height:30px;font-size:.78rem;border-radius:var(--r2)}
+.dlg-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px -24px 0;padding:12px 24px;border-top:1px solid var(--line);background:var(--card2);border-radius:0 0 calc(var(--r2) + 6px) calc(var(--r2) + 6px)}
+.primary.sm,.secondary.sm{padding:7px 14px;font-size:.9rem}
+.primary.danger-btn{background:var(--danger);color:#fff}
+.btn-text{border:0;background:none;padding:7px 8px;border-radius:var(--r2);font-size:.9rem;color:var(--mute)}
+.btn-text:hover{background:var(--card)}
+.btn-text.danger{color:var(--danger)}
+.ap-total input[type=range]{flex:1;accent-color:var(--accent);min-height:0;padding:0}
+.ap-total input[type=range]:hover{background:transparent}
+.ap-wv input.num{flex:0 0 52px;text-align:center}
+#aRows{border-top:1px solid var(--line)}
+@media (max-width:560px){
+  dialog,dialog.small,dialog.wide{width:100%;max-width:100%;margin:auto 0 0;border-radius:16px 16px 0 0;max-height:92vh}
+  .dlg-foot{border-radius:0;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+  .prop{grid-template-columns:118px minmax(0,1fr)}
+  .dlg{padding:20px 18px 0}.dlg-foot{margin:6px -18px 0;padding-left:18px;padding-right:18px}
+}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:var(--r2);font-size:.9rem;z-index:50;display:flex;gap:14px;align-items:center;max-width:calc(100vw - 32px);box-shadow:0 6px 20px rgb(0 0 0 / .2)}
 .toast button{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:0}
 #tour{position:fixed;inset:0;z-index:80}
@@ -412,84 +449,95 @@ dialog::backdrop{background:rgb(15 15 15 / .62);background:var(--scrim, rgb(15 1
 </nav>
 
 <!-- задача -->
-<dialog id="dlg">
+<dialog id="dlg" aria-labelledby="dlgK">
   <form method="dialog" class="dlg" id="dlgForm">
-    <h2>Задача</h2>
-    <label>Название<input type="text" name="title" required maxlength="140" autocomplete="off"></label>
-    <label>Категория<select name="cat"></select></label>
-    <label>День задачи<input type="date" name="day" required></label>
-    <label><span id="dlgMinLbl">Время за день, минут</span><input type="text" name="min" inputmode="numeric" autocomplete="off"></label>
-    <div><div class="mute sm" style="margin-bottom:4px">Повторять по дням</div><div class="wdchips" id="dlgDays" role="group" aria-label="Дни повтора"></div></div>
-    <p class="mute sm" id="dlgInfo"></p>
-    <div class="row">
-      <button class="primary" value="save">Сохранить</button>
-      <button class="secondary" value="cancel" formnovalidate>Отмена</button>
+    <div class="dlg-k" id="dlgK">Задача</div>
+    <input class="dlg-title" type="text" name="title" required maxlength="140" autocomplete="off" placeholder="Без названия" aria-label="Название задачи">
+    <div class="props">
+      <div class="prop"><label for="dCat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>Категория</label><select id="dCat" name="cat"></select></div>
+      <div class="prop"><label for="dDay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>День</label><input id="dDay" type="date" name="day" required></div>
+      <div class="prop"><label for="dMin"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="dlgMinLbl">Время за сегодня</span></label><div class="pv"><input id="dMin" type="text" name="min" inputmode="numeric" autocomplete="off" placeholder="0"><span class="unit">мин</span></div></div>
+      <div class="prop"><span class="pl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>Повтор</span><div class="wdchips" id="dlgDays" role="group" aria-label="Дни повтора"></div></div>
+    </div>
+    <p class="dlg-note" id="dlgInfo"></p>
+    <div class="dlg-foot">
+      <button class="btn-text danger" type="button" id="dlgDel">Удалить</button>
+      <button class="btn-text danger" type="button" id="dlgDelAll">Удалить повтор</button>
       <span class="grow"></span>
-      <button class="secondary danger" value="del" formnovalidate id="dlgDel">Удалить</button>
-      <button class="secondary danger" value="delall" formnovalidate id="dlgDelAll">Удалить повтор</button>
+      <button class="secondary sm" type="button" data-close="cancel">Отмена</button>
+      <button class="primary sm" value="save">Сохранить</button>
     </div>
   </form>
 </dialog>
 
 <!-- добавить время вручную -->
-<dialog id="tdlg">
+<dialog id="tdlg" aria-labelledby="tK">
   <form method="dialog" class="dlg" id="tForm">
-    <h2>Добавить время</h2>
-    <label>На что<select name="target"></select></label>
-    <label>День<input type="date" name="day" required></label>
-    <div class="trow">
-      <label>С<input type="time" name="from"></label>
-      <label>По<input type="time" name="to"></label>
+    <div class="dlg-k" id="tK">Время без таймера</div>
+    <div class="dlg-h">Добавить время</div>
+    <div class="props">
+      <div class="prop"><label for="tTarget"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>На что</label><select id="tTarget" name="target"></select></div>
+      <div class="prop"><label for="tDay"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>День</label><input id="tDay" type="date" name="day" required></div>
+      <div class="prop"><span class="pl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 7v10M20 7v10"/></svg>Отрезок</span><div class="pv"><input type="time" name="from" aria-label="С"><span class="unit">—</span><input type="time" name="to" aria-label="По"></div></div>
+      <div class="prop"><label for="tMin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4"/></svg>Или минут</label><div class="pv"><input id="tMin" type="text" name="min" inputmode="numeric" autocomplete="off" placeholder="0"><span class="unit">мин</span></div></div>
+      <div class="prop"><span class="pl"></span><div class="presets"><button type="button" class="pill" data-min="15">15 мин</button><button type="button" class="pill" data-min="30">30 мин</button><button type="button" class="pill" data-min="45">45 мин</button><button type="button" class="pill" data-min="60">1 ч</button><button type="button" class="pill" data-min="90">1,5 ч</button></div></div>
     </div>
-    <label>…или просто минут<input type="text" name="min" inputmode="numeric" autocomplete="off" placeholder="например, 45"></label>
-    <div class="row">
-      <button class="primary" value="save">Добавить</button>
-      <button class="secondary" value="cancel" formnovalidate>Отмена</button>
+    <p class="dlg-note" id="tDur"></p>
+    <div class="dlg-foot">
+      <span class="grow"></span>
+      <button class="secondary sm" type="button" data-close="cancel">Отмена</button>
+      <button class="primary sm" value="save">Добавить</button>
     </div>
   </form>
 </dialog>
 
 <!-- подтверждение (вместо confirm(), который блокируют встроенные просмотрщики) -->
-<dialog id="cdlg">
+<dialog id="cdlg" class="small" aria-labelledby="cText">
   <form method="dialog" class="dlg">
-    <p id="cText" style="font-size:1rem"></p>
-    <div class="row"><button class="primary" value="ok" id="cOk">Да</button><button class="secondary" value="cancel">Отмена</button></div>
+    <p id="cText" class="dlg-msg"></p>
+    <div class="dlg-foot">
+      <span class="grow"></span>
+      <button class="secondary sm" type="button" data-close="cancel">Отмена</button>
+      <button class="primary sm" value="ok" id="cOk">Да</button>
+    </div>
   </form>
 </dialog>
 
 <!-- автоплан -->
-<dialog id="adlg">
+<dialog id="adlg" class="wide" aria-labelledby="aK">
   <form method="dialog" class="dlg" id="aForm">
-    <h2>Автоплан</h2>
-    <p class="mute sm" id="aFor"></p>
-    <div class="ap-total">
-      <span class="mute sm">Всего</span>
-      <input type="range" name="total" min="1" max="80" step="1" aria-label="Часов на неделю">
-      <label class="hrs"><input type="text" inputmode="decimal" name="totalN" aria-label="Часов на неделю, числом"><span class="mute sm">ч</span></label>
+    <div class="dlg-k" id="aK">Автоплан</div>
+    <div class="dlg-h" id="aFor"></div>
+    <div class="props">
+      <div class="prop"><span class="pl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Всего на неделю</span><div class="pv ap-total"><input type="range" name="total" min="1" max="80" step="1" aria-label="Часов на неделю"><input type="text" inputmode="decimal" name="totalN" class="num" aria-label="Часов на неделю, числом"><span class="unit">ч</span></div></div>
+      <div class="prop"><span class="pl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0z"/></svg>Веса приоритетов</span><div class="pv ap-wv"><input type="text" inputmode="decimal" name="w1" class="num" aria-label="Вес низкого приоритета"><span class="unit">:</span><input type="text" inputmode="decimal" name="w2" class="num" aria-label="Вес среднего приоритета"><span class="unit">:</span><input type="text" inputmode="decimal" name="w3" class="num" aria-label="Вес высокого приоритета"><span class="unit sm">низкий · средний · высокий</span></div></div>
     </div>
-    <div class="ap-w"><span>Веса приоритетов: низкий : средний : высокий</span>
-      <span class="ap-wv"><input type="text" inputmode="decimal" name="w1" aria-label="Вес низкого приоритета"> : <input type="text" inputmode="decimal" name="w2" aria-label="Вес среднего приоритета"> : <input type="text" inputmode="decimal" name="w3" aria-label="Вес высокого приоритета"></span></div>
     <div id="aRows"></div>
     <label class="chkl" id="aDebtRow"><input type="checkbox" name="debt"><span id="aDebtLbl"></span></label>
     <p class="note warn" id="aWarn" hidden></p>
-    <div class="ap-sum"><span id="aSum"></span><span class="mute" id="aLeft"></span></div>
-    <div class="row">
-      <button class="primary" value="apply">Применить</button>
-      <button class="secondary" value="cancel" formnovalidate>Отмена</button>
+    <div class="dlg-foot">
+      <span id="aSum"></span><span class="mute sm" id="aLeft"></span>
+      <span class="grow"></span>
+      <button class="secondary sm" type="button" data-close="cancel">Отмена</button>
+      <button class="primary sm" value="apply">Применить</button>
     </div>
   </form>
 </dialog>
 
 <!-- забытый таймер -->
-<dialog id="gdlg">
+<dialog id="gdlg" aria-labelledby="gH">
   <form method="dialog" class="dlg" id="gForm">
-    <h2>Таймер всё ещё идёт</h2>
-    <p id="gText"></p>
-    <label>Когда на самом деле закончил<input type="datetime-local" name="end"></label>
-    <div class="row">
-      <button class="primary" value="cut">Остановить в это время</button>
-      <button class="secondary" value="now">Остановить сейчас</button>
-      <button class="secondary" value="keep">Я ещё занимаюсь</button>
+    <div class="dlg-k">Таймер</div>
+    <div class="dlg-h" id="gH">Таймер всё ещё идёт</div>
+    <p id="gText" class="dlg-msg"></p>
+    <div class="props">
+      <div class="prop"><label for="gEnd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 22V4M5 4h11l-2 4 2 4H5"/></svg>Закончил в</label><input id="gEnd" type="datetime-local" name="end"></div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn-text" type="button" data-close="keep">Я ещё занимаюсь</button>
+      <span class="grow"></span>
+      <button class="secondary sm" type="button" data-close="now">Остановить сейчас</button>
+      <button class="primary sm" value="cut">Остановить в это время</button>
     </div>
   </form>
 </dialog>
@@ -928,11 +976,14 @@ function tasksCol() {
   <div class="head"><h1 class="grow">Задачи</h1></div>
   <p class="date">${d === td ? 'на сегодня' : 'на ' + fmtShort(d)}${tasks.length ? ` · осталось ${left} из ${tasks.length}` : ''}</p>
   <section class="card" id="taskCard">
-    <form class="add" data-form="task">
-      <input type="text" name="title" placeholder="Например: Present Simple, MEX/XOR" maxlength="140" required autocomplete="off" aria-label="Новая задача">
-      <select name="cat" aria-label="Категория">${catOpts(S.lastCat)}</select>
-      <button class="chip" type="button" data-act="reptoggle" aria-pressed="${!!rep}" title="Повторять">↻ Повтор</button>
-      <button class="primary" type="submit">Добавить</button>
+    <form class="add-task" data-form="task">
+      <input class="add-title" type="text" name="title" placeholder="Новая задача, например MEX/XOR" maxlength="140" required autocomplete="off" aria-label="Новая задача">
+      <div class="add-row">
+        <select name="cat" class="pill-sel" aria-label="Категория">${catOpts(S.lastCat)}</select>
+        <button class="pill" type="button" data-act="reptoggle" aria-pressed="${!!rep}" title="Повторять по дням">↻ Повтор</button>
+        <span class="grow"></span>
+        <button class="primary sm" type="submit">Добавить</button>
+      </div>
     </form>
     <div class="repeat-row" id="repRow"${rep ? '' : ' hidden'}><span>Повторять:</span><div class="wdchips">${wdChips(rep || [], 'nwd')}</div></div>
     ${tasks.length ? `<ul class="tasks">${tasks.map(t => taskHTML(t, d)).join('')}</ul>` : `<p class="empty">Задач на этот день нет.</p>`}
@@ -1425,9 +1476,9 @@ addEventListener('scroll', () => requestAnimationFrame(placeTour), { passive: tr
 addEventListener('keydown', e => { if (tourI >= 0 && e.key === 'Escape') endTour(); });
 
 // своё окно подтверждения: возвращает Promise<boolean>
-function ask(text, ok) {
+function ask(text, ok, danger) {
   const d = $('#cdlg');
-  $('#cText').textContent = text; $('#cOk').textContent = ok || 'Да';
+  $('#cText').textContent = text; $('#cOk').textContent = ok || 'Да'; $('#cOk').classList.toggle('danger-btn', !!danger);
   return new Promise(res => { d.addEventListener('close', () => res(d.returnValue === 'ok'), { once: true }); d.returnValue = ''; d.showModal(); });
 }
 function addLog(cat, day, sec, extra) {
@@ -1506,7 +1557,7 @@ view.addEventListener('click', async e => {
     case 'cmode': { const c = D.cats[id]; c.mode = b.dataset.v; touch(c); save(); return render(); }
     case 'cdel': {
       const c = D.cats[id], n = live('tasks').filter(x => x.cat === id).length;
-      if (!await ask(`Удалить «${c.name}»?${n ? ` ${n} задач останутся без категории.` : ''}`)) return;
+      if (!await ask(`Удалить «${c.name}»?${n ? ` ${n} задач останутся без категории.` : ''}`, 'Удалить', true)) return;
       c.del = true; touch(c); V.editCat = null; save(); render();
       return toast('Категория удалена', () => { c.del = false; touch(c); save(); render(); });
     }
@@ -1524,15 +1575,15 @@ view.addEventListener('click', async e => {
     }
     case 'syncnow': return sync();
     case 'syncoff':
-      if (!await ask('Отключить синхронизацию на этом устройстве? Данные здесь и в gist останутся.')) return;
+      if (!await ask('Отключить синхронизацию на этом устройстве? Данные здесь и в gist останутся.', 'Отключить')) return;
       S.token = ''; S.gist = ''; S.last = 0; saveS(); syncState = 'off'; return render();
-    case 'demoreset': if (!await ask('Стереть изменения и вернуть демо-данные?')) return; D = demoData(); save(); V.day = today(); V.week = weekStart(today()); V.hideReview = false; return go('home');
+    case 'demoreset': if (!await ask('Стереть изменения и вернуть демо-данные?', 'Начать заново', true)) return; D = demoData(); save(); V.day = today(); V.week = weekStart(today()); V.hideReview = false; return go('home');
     case 'csvtime': return csvTime();
     case 'csvweeks': return csvWeeks();
     case 'export': return download(`every-day-${today()}.json`, JSON.stringify(D, null, 1), 'application/json');
     case 'import': return $('#importFile').click();
     case 'wipe': {
-      if (!await ask('Удалить все задачи, категории и планы? Если включена синхронизация, удаление дойдёт и до другого устройства.')) return;
+      if (!await ask('Удалить все задачи, категории и планы? Если включена синхронизация, удаление дойдёт и до другого устройства.', 'Удалить всё', true)) return;
       const now = Date.now();
       for (const c of COLL) for (const x of Object.values(D[c])) { x.del = true; x.u = now; }
       save(); render(); return toast('Всё удалено');
@@ -1617,10 +1668,10 @@ function openTask(t) {
   paintDays();
   $('#dlgDelAll').hidden = !(r && !r.del);
   $('#dlgDel').textContent = r && !r.del ? 'Удалить этот день' : 'Удалить';
-  $('#dlgMinLbl').textContent = `Время за ${V.day === today() ? 'сегодня' : fmtShort(V.day)}, минут`;
+  $('#dlgMinLbl').textContent = `Время за ${V.day === today() ? 'сегодня' : fmtShort(V.day)}`;
   $('#dlgInfo').textContent = (t.run ? 'Таймер идёт: текущий отрезок добавится, когда остановишь. ' : '') + 'Всего по задаче: ' + hm(taskTotal(t))
     + (r && !r.del ? '. Название, категория и дни меняются для всего повтора.' : '');
-  dlg.showModal();
+  dlg.returnValue = ''; dlg.showModal();
 }
 $('#dlgDays').addEventListener('click', e => {
   const b = e.target.closest('[data-wd]'); if (!b) return;
@@ -1636,7 +1687,7 @@ dlg.addEventListener('close', async () => {
     return toast('Удалено', () => { x.del = false; touch(x); save(); render(); });
   }
   if (rv === 'delall' && r) {
-    if (!await ask(`Перестать повторять «${r.title}» с ${fmtShort(t.day)}? Прошлые дни останутся.`)) return;
+    if (!await ask(`Перестать повторять «${r.title}» с ${fmtShort(t.day)}? Прошлые дни останутся.`, 'Перестать повторять', true)) return;
     r.end = addDays(t.day, -1); if (r.end < r.start) r.del = true; touch(r);
     for (const x of live('tasks')) if (x.recur === r.id && x.day >= t.day && !x.done) { x.del = true; x.run = 0; touch(x); }
     save(); return render();
@@ -1661,6 +1712,11 @@ dlg.addEventListener('close', async () => {
   save(); render();
 });
 
+// кнопки «Отмена» и подобные: закрывают окно с нужным результатом, но не отправляют форму (Enter = основное действие)
+document.addEventListener('click', e => { const b = e.target.closest('[data-close]'); if (b) b.closest('dialog').close(b.dataset.close); });
+$('#dlgDel').addEventListener('click', () => dlg.close('del'));
+$('#dlgDelAll').addEventListener('click', () => dlg.close('delall'));
+
 /* ---------- окно «добавить время» ---------- */
 const tdlg = $('#tdlg'), tform = $('#tForm');
 function openTime() {
@@ -1668,8 +1724,21 @@ function openTime() {
   tform.target.innerHTML = `<optgroup label="Категория">${cats().map(c => `<option value="c:${c.id}">${esc(catLabel(c))}</option>`).join('')}<option value="c:">Без категории</option></optgroup>`
     + (ts.length ? `<optgroup label="Задача этого дня">${ts.map(t => `<option value="t:${esc(t.id)}">${esc(t.title)}</option>`).join('')}</optgroup>` : '');
   tform.day.value = V.day; tform.from.value = ''; tform.to.value = ''; tform.min.value = '';
-  tdlg.showModal();
+  paintDur();
+  tdlg.returnValue = ''; tdlg.showModal();
 }
+function tDuration() {
+  const from = tform.from.value, to = tform.to.value;
+  if (from && to) { const a = +from.slice(0, 2) * 60 + +from.slice(3), b = +to.slice(0, 2) * 60 + +to.slice(3); return ((b - a + 1440) % 1440) * 60; }
+  return (parseInt(tform.min.value, 10) || 0) * 60;
+}
+function paintDur() {
+  const sec = tDuration(), m = Math.round(sec / 60);
+  tform.querySelectorAll('[data-min]').forEach(b => b.setAttribute('aria-pressed', !(tform.from.value && tform.to.value) && +b.dataset.min === m));
+  $('#tDur').textContent = sec > 0 ? 'Будет добавлено: ' + hm(sec) + (tform.from.value && tform.to.value ? ` (${tform.from.value}–${tform.to.value})` : '') : '';
+}
+tform.addEventListener('click', e => { const b = e.target.closest('[data-min]'); if (!b) return; tform.min.value = b.dataset.min; tform.from.value = ''; tform.to.value = ''; paintDur(); });
+tform.addEventListener('input', e => { if (e.target.name === 'min' && e.target.value) { tform.from.value = ''; tform.to.value = ''; } paintDur(); });
 tdlg.addEventListener('close', () => {
   if (tdlg.returnValue !== 'save') return;
   const day = tform.day.value || V.day, from = tform.from.value, to = tform.to.value;
@@ -1699,7 +1768,7 @@ function checkGuard() {
   $('#gText').textContent = `«${t.title}» идёт уже ${hm((Date.now() - t.run) / 1000)}, с ${new Date(t.run).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. Если забыл остановить, укажи, когда закончил.`;
   gform.end.min = localDT(t.run); gform.end.max = localDT(Date.now());
   gform.end.value = localDT(Math.min(Date.now(), t.run + 3600e3));
-  gdlg.showModal();
+  gdlg.returnValue = ''; gdlg.showModal();
 }
 gdlg.addEventListener('close', () => {
   const t = gTask; gTask = null;
@@ -1740,7 +1809,7 @@ function openAuto(kind) {
   aform.total.value = Math.min(80, total); aform.totalN.value = hoursStr(total * 60);
   const w = D.ap.w || [1, 2, 3];
   aform.w1.value = String(w[0]).replace('.', ','); aform.w2.value = String(w[1]).replace('.', ','); aform.w3.value = String(w[2]).replace('.', ',');
-  $('#aFor').textContent = 'План на ' + fmtRange(ws) + '. Можно выбрать приоритет, свою долю в процентах или точное число часов.';
+  $('#aFor').textContent = 'План на ' + fmtRange(ws);
   const dsum = sumv(debt);
   $('#aDebtRow').hidden = !dsum; aform.debt.checked = false;
   $('#aDebtLbl').textContent = `Добавить недобор недели ${fmtRange(src)} (+${hmm(dsum * 60)})`;
@@ -1758,7 +1827,7 @@ function openAuto(kind) {
     </div>`;
   }).join('') + cats().filter(isMax).map(c => `<div class="aprow" style="--cc:var(--${c.color})"><div class="pname">${catDot(c)}<span>${esc(c.name)}</span></div><span class="mute sm">лимит ${hmm((base[c.id] || 0) * 60)}, не делится</span></div>`).join('');
   calcAuto();
-  adlg.showModal();
+  adlg.returnValue = ''; adlg.showModal();
 }
 function readAuto() {
   const total = parseHours(aform.totalN.value);
