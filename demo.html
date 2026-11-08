@@ -309,6 +309,14 @@ dialog::backdrop{background:rgb(0 0 0 / .45)}
   </form>
 </dialog>
 
+<!-- подтверждение (вместо confirm(), который блокируют встроенные просмотрщики) -->
+<dialog id="cdlg">
+  <form method="dialog" class="dlg">
+    <p id="cText" style="font-size:1rem"></p>
+    <div class="row"><button class="primary" value="ok" id="cOk">Да</button><button class="secondary" value="cancel">Отмена</button></div>
+  </form>
+</dialog>
+
 <!-- автоплан -->
 <dialog id="adlg">
   <form method="dialog" class="dlg" id="aForm">
@@ -1071,6 +1079,12 @@ function paintRep() {
   row.hidden = !V.newRep; btn.setAttribute('aria-pressed', !!V.newRep);
   row.querySelector('.wdchips').innerHTML = wdChips(V.newRep || [], 'nwd');
 }
+// своё окно подтверждения: возвращает Promise<boolean>
+function ask(text, ok) {
+  const d = $('#cdlg');
+  $('#cText').textContent = text; $('#cOk').textContent = ok || 'Да';
+  return new Promise(res => { d.addEventListener('close', () => res(d.returnValue === 'ok'), { once: true }); d.returnValue = ''; d.showModal(); });
+}
 function addLog(cat, day, sec, extra) {
   const l = touch({ id: uid(), cat, day, sec, ...(extra || {}) });
   D.logs[l.id] = l; save(); render();
@@ -1078,7 +1092,7 @@ function addLog(cat, day, sec, extra) {
 }
 
 const view = $('#view');
-view.addEventListener('click', e => {
+view.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const act = b.dataset.act, li = b.closest('[data-id]'), id = b.dataset.id || (li && li.dataset.id);
   switch (act) {
@@ -1143,7 +1157,7 @@ view.addEventListener('click', e => {
     case 'cmode': { const c = D.cats[id]; c.mode = b.dataset.v; touch(c); save(); return render(); }
     case 'cdel': {
       const c = D.cats[id], n = live('tasks').filter(x => x.cat === id).length;
-      if (!confirm(`Удалить «${c.name}»?${n ? ` ${n} задач останутся без категории.` : ''}`)) return;
+      if (!await ask(`Удалить «${c.name}»?${n ? ` ${n} задач останутся без категории.` : ''}`)) return;
       c.del = true; touch(c); V.editCat = null; save(); render();
       return toast('Категория удалена', () => { c.del = false; touch(c); save(); render(); });
     }
@@ -1161,15 +1175,15 @@ view.addEventListener('click', e => {
     }
     case 'syncnow': return sync();
     case 'syncoff':
-      if (!confirm('Отключить синхронизацию на этом устройстве? Данные здесь и в gist останутся.')) return;
+      if (!await ask('Отключить синхронизацию на этом устройстве? Данные здесь и в gist останутся.')) return;
       S.token = ''; S.gist = ''; S.last = 0; saveS(); syncState = 'off'; return render();
-    case 'demoreset': if (!confirm('Стереть изменения и вернуть демо-данные?')) return; D = demoData(); save(); V.day = today(); V.week = weekStart(today()); V.hideReview = false; return go('day');
+    case 'demoreset': if (!await ask('Стереть изменения и вернуть демо-данные?')) return; D = demoData(); save(); V.day = today(); V.week = weekStart(today()); V.hideReview = false; return go('day');
     case 'csvtime': return csvTime();
     case 'csvweeks': return csvWeeks();
     case 'export': return download(`every-day-${today()}.json`, JSON.stringify(D, null, 1), 'application/json');
     case 'import': return $('#importFile').click();
     case 'wipe': {
-      if (!confirm('Удалить все задачи, категории и планы? Если включена синхронизация, удаление дойдёт и до другого устройства.')) return;
+      if (!await ask('Удалить все задачи, категории и планы? Если включена синхронизация, удаление дойдёт и до другого устройства.')) return;
       const now = Date.now();
       for (const c of COLL) for (const x of Object.values(D[c])) { x.del = true; x.u = now; }
       save(); render(); return toast('Всё удалено');
@@ -1258,7 +1272,7 @@ $('#dlgDays').addEventListener('click', e => {
   const b = e.target.closest('[data-wd]'); if (!b) return;
   const i = +b.dataset.wd, s = new Set(dDays); s.has(i) ? s.delete(i) : s.add(i); dDays = [...s].sort(); paintDays();
 });
-dlg.addEventListener('close', () => {
+dlg.addEventListener('close', async () => {
   let t = dTask; dTask = null;
   if (!t) return;
   const rv = dlg.returnValue, r = t.recur && D.recur[t.recur] && !D.recur[t.recur].del ? D.recur[t.recur] : null;
@@ -1268,7 +1282,7 @@ dlg.addEventListener('close', () => {
     return toast('Удалено', () => { x.del = false; touch(x); save(); render(); });
   }
   if (rv === 'delall' && r) {
-    if (!confirm(`Перестать повторять «${r.title}» с ${fmtShort(t.day)}? Прошлые дни останутся.`)) return;
+    if (!await ask(`Перестать повторять «${r.title}» с ${fmtShort(t.day)}? Прошлые дни останутся.`)) return;
     r.end = addDays(t.day, -1); if (r.end < r.start) r.del = true; touch(r);
     for (const x of live('tasks')) if (x.recur === r.id && x.day >= t.day && !x.done) { x.del = true; x.run = 0; touch(x); }
     save(); return render();
@@ -1524,7 +1538,7 @@ async function sync() {
 }
 
 /* ================= запуск ================= */
-const isEditing = () => dlg.open || tdlg.open || gdlg.open || adlg.open || V.tab === 'review' || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+const isEditing = () => $('#cdlg').open || dlg.open || tdlg.open || gdlg.open || adlg.open || V.tab === 'review' || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
 let tick = 0;
 setInterval(() => {
   document.querySelectorAll('[data-live]').forEach(el => { const t = getTask(el.dataset.live); if (t) el.textContent = clock(taskSecOn(t, el.dataset.day)); });
