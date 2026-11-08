@@ -216,6 +216,22 @@ ol.help li{margin:3px 0}
 .trow{display:flex;gap:8px}
 .trow label{flex:1}
 input[type=time],input[type=datetime-local]{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 11px;min-width:0;min-height:42px}
+.ap-total{display:flex;align-items:center;gap:10px}
+.ap-total input[type=range]{flex:1;width:auto;accent-color:var(--accent)}
+.dlg label.hrs{display:flex;flex-direction:row}
+.dlg .hrs input{width:58px}
+.ap-w{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.85rem;color:var(--mute)}
+.dlg .ap-w input{width:46px;text-align:center;padding:6px 4px}
+.aprow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.aprow .ctl{grid-column:1/-1;display:flex;gap:8px;align-items:center}
+.dlg .aprow select{width:auto;flex:1;font-size:.9rem;padding:7px 9px}
+.aprow .aval{display:flex;align-items:center;gap:6px}
+.dlg .aprow .aval input{width:70px;text-align:right;padding:7px 9px}
+.aprow .ares{font-variant-numeric:tabular-nums;font-size:1.05rem}
+.aprow .pbar{height:6px}
+.dlg .chkl{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:.9rem}
+.dlg .chkl input{width:20px;height:20px;flex:none}
+.ap-sum{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;padding-top:8px;border-top:1px solid var(--line)}
 
 /* диалог и тост */
 dialog{border:0;border-radius:18px;padding:0;background:var(--card);color:var(--ink);width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
@@ -239,7 +255,7 @@ dialog::backdrop{background:rgb(0 0 0 / .45)}
 
 <header class="top">
   <div class="top-in">
-    <span class="brand">Every Day</span>
+    <span class="brand">Every Day</span><span class="tag" id="demoTag" hidden>демо</span>
     <span class="grow"></span>
     <button class="run-chip" id="runChip" type="button" hidden></button>
     <button class="sync" id="syncBtn" type="button" title="Синхронизация выключена" aria-label="Синхронизация"><i></i></button>
@@ -293,6 +309,29 @@ dialog::backdrop{background:rgb(0 0 0 / .45)}
   </form>
 </dialog>
 
+<!-- автоплан -->
+<dialog id="adlg">
+  <form method="dialog" class="dlg" id="aForm">
+    <h2>Автоплан</h2>
+    <p class="mute sm" id="aFor"></p>
+    <div class="ap-total">
+      <span class="mute sm">Всего</span>
+      <input type="range" name="total" min="1" max="80" step="1" aria-label="Часов на неделю">
+      <label class="hrs"><input type="text" inputmode="decimal" name="totalN" aria-label="Часов на неделю, числом"><span class="mute sm">ч</span></label>
+    </div>
+    <div class="ap-w"><span>Приоритеты низкий : средний : высокий =</span>
+      <input type="text" inputmode="decimal" name="w1" aria-label="Вес низкого приоритета"> : <input type="text" inputmode="decimal" name="w2" aria-label="Вес среднего приоритета"> : <input type="text" inputmode="decimal" name="w3" aria-label="Вес высокого приоритета"></div>
+    <div id="aRows"></div>
+    <label class="chkl" id="aDebtRow"><input type="checkbox" name="debt"><span id="aDebtLbl"></span></label>
+    <p class="note warn" id="aWarn" hidden></p>
+    <div class="ap-sum"><span id="aSum"></span><span class="mute" id="aLeft"></span></div>
+    <div class="row">
+      <button class="primary" value="apply">Применить</button>
+      <button class="secondary" value="cancel" formnovalidate>Отмена</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- забытый таймер -->
 <dialog id="gdlg">
   <form method="dialog" class="dlg" id="gForm">
@@ -315,7 +354,9 @@ dialog::backdrop{background:rgb(0 0 0 / .45)}
 'use strict';
 
 /* ================= утилиты ================= */
-const KEY = 'everyday-v2', SKEY = 'everyday-settings', FILE = 'every-day.json';
+// демо-режим: index.html?demo или файл demo.html. Отдельное хранилище, готовые данные, без синхронизации
+const DEMO = new URLSearchParams(location.search).has('demo') || document.documentElement.dataset.demo === '1';
+const KEY = DEMO ? 'everyday-demo' : 'everyday-v2', SKEY = DEMO ? 'everyday-demo-settings' : 'everyday-settings', FILE = 'every-day.json';
 const COLL = ['cats', 'tasks', 'weeks', 'days', 'logs', 'recur'];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -362,7 +403,7 @@ const KN = { main: 'Главный', normal: 'Обычный', off: 'Выход�
 const W = { main: 2, normal: 1, off: 0 }; // вес дня: главный получает вдвое больше часов, выходной — ноль
 const GUARD_MS = 3 * 3600e3;              // через сколько спрашивать, не забыт ли таймер
 
-const blank = () => ({ v: 2, cats: {}, tasks: {}, weeks: {}, days: {}, logs: {}, recur: {}, tpl: { kinds: ['normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'off'], u: 0 } });
+const blank = () => ({ v: 2, cats: {}, tasks: {}, weeks: {}, days: {}, logs: {}, recur: {}, tpl: { kinds: ['normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'off'], u: 0 }, ap: { total: 0, w: [1, 2, 3], cats: {}, u: 0 } });
 function load() {
   try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.v === 2) return Object.assign(blank(), x); } catch (e) {}
   const d = blank();
@@ -372,6 +413,38 @@ function load() {
   return d;
 }
 let D = load();
+if (DEMO && !localStorage.getItem(KEY)) D = demoData();
+function demoData() {
+  const d = blank(), td = today(), ws = weekStart(td), u = 1000;
+  const C = [['en', 'Английский', 'c1', '🗣️', 'min'], ['cp', 'CP', 'c2', '💻', 'min'], ['mat', 'Матан', 'c3', '🧮', 'min'], ['games', 'Игры', 'c4', '🎮', 'max']];
+  C.forEach(([id, name, color, emoji, mode], i) => { d.cats[id] = { id, name, color, emoji, mode, order: i + 1, u }; });
+  const log = (cat, day, min) => { const id = 'l-' + cat + '-' + day; d.logs[id] = { id, cat, day, sec: min * 60, u }; };
+  // прошлые 6 недель: одни выполнены, другие нет — чтобы были история и серия
+  const share = [0.7, 0.85, 0.6, 1.05, 1.1, 1.0];
+  share.forEach((k, j) => {
+    const w = addDays(ws, -7 * (6 - j)), plan = { en: 300, cp: 480, mat: 240, games: 300 };
+    d.weeks[w] = { id: w, plan, reviewed: true, u };
+    [['en', 300], ['cp', 480], ['mat', 240]].forEach(([c, m]) => [0, 1, 2, 3, 4].forEach(i => log(c, addDays(w, i), Math.round(m * k / 5))));
+    log('games', addDays(w, 5), k > 1 ? 240 : 200);
+  });
+  // текущая неделя
+  d.weeks[ws] = { id: ws, plan: { en: 420, cp: 600, mat: 300, games: 240 }, u };
+  d.days[addDays(ws, 2)] = { id: addDays(ws, 2), kind: 'main', skip: false, u };
+  d.days[addDays(ws, 3)] = { id: addDays(ws, 3), kind: 'normal', skip: true, u };
+  const T = (id, title, cat, day, done, mins, logDay) => { d.tasks[id] = { id, title, cat, day, done: !!done, log: mins ? { [logDay || day]: mins * 60 } : {}, run: 0, created: u + Object.keys(d.tasks).length, u }; };
+  const past = n => addDays(ws, n) < td;
+  if (past(0)) { T('t1', 'Present Simple: правила', 'en', addDays(ws, 0), 1, 60); T('t2', 'MEX и XOR: 3 задачи', 'cp', addDays(ws, 0), 1, 90); }
+  if (past(1)) { T('t3', 'Codeforces Div. 3, дорешка', 'cp', addDays(ws, 1), 1, 120); }
+  if (past(2)) { T('t4', 'Past Simple: упражнения', 'en', addDays(ws, 2), 1, 90); T('t5', 'Бинпоиск по ответу', 'cp', addDays(ws, 2), 1, 120); T('t6', 'Пределы: ДЗ', 'mat', addDays(ws, 2), 1, 60); }
+  if (past(3)) T('t7', 'Конспект по матану', 'mat', addDays(ws, 3), 0, 0);
+  if (past(4)) { T('t8', 'Слушать подкаст', 'en', addDays(ws, 4), 1, 30); log('mat', addDays(ws, 4), 60); log('games', addDays(ws, 4), 180); }
+  if (past(5)) { log('cp', addDays(ws, 5), 60); log('games', addDays(ws, 5), 120); }
+  T('t9', 'Present Perfect: таблица', 'en', td, 0, 0);
+  T('t10', 'Разобрать задачу с префиксными суммами', 'cp', td, 0, 0);
+  d.recur.r1 = { id: 'r1', title: 'Слова, 20 штук', cat: 'en', days: [0, 2, 4], start: addDays(ws, -14), created: u, u };
+  d.recur.r2 = { id: 'r2', title: 'Задача дня на Codeforces', cat: 'cp', days: [0, 1, 2, 3, 4, 5, 6], start: addDays(ws, -14), created: u, u };
+  return d;
+}
 let S = Object.assign({ theme: 'system', token: '', gist: '', last: 0, lastCat: '' }, (() => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch (e) { return {}; } })());
 const saveS = () => localStorage.setItem(SKEY, JSON.stringify(S));
 
@@ -400,7 +473,7 @@ function merge(into, other) {
     const a = into[c], b = (other && other[c]) || {};
     for (const [k, x] of Object.entries(b)) if (!a[k] || (x.u || 0) > (a[k].u || 0)) { a[k] = x; changed = true; }
   }
-  if (other && other.tpl && (other.tpl.u || 0) > (into.tpl.u || 0)) { into.tpl = other.tpl; changed = true; }
+  for (const k of ['tpl', 'ap']) if (other && other[k] && (other[k].u || 0) > ((into[k] && into[k].u) || 0)) { into[k] = other[k]; changed = true; }
   return changed;
 }
 
@@ -750,7 +823,7 @@ function renderWeek() {
   </section>
 
   <section class="card">
-    <div class="card-h"><h2>План на неделю</h2>${Object.keys(prevPlan).length && !Object.keys(plan).length ? `<button class="ghost" type="button" data-act="copyplan">Как на прошлой неделе</button>` : ''}</div>
+    <div class="card-h"><h2>План на неделю</h2>${Object.keys(prevPlan).length && !Object.keys(plan).length ? `<button class="ghost" type="button" data-act="copyplan">Как на прошлой неделе</button>` : ''}${cats().length ? `<button class="ghost" type="button" data-act="auto" data-for="week">Автоплан</button>` : ''}</div>
     <p class="mute sm">Сколько часов хочешь отдать каждой категории. Главный день получает вдвое больше времени, выходной — ноль. Для категорий «не больше» это лимит на неделю.</p>
     ${cats().length ? rows : `<p class="empty">Сначала создай категории. <button class="link" type="button" data-act="gocats">Категории →</button></p>`}
     ${cats().length ? `<div class="legend"><span><i class="mk"></i>сколько должно быть сделано к сегодняшнему дню</span></div>` : ''}
@@ -807,6 +880,7 @@ function renderReview() {
   <section class="card">
     <h2>План на ${fmtRange(next)}</h2>
     <p class="mute sm">Заполнено по ${Object.keys(planOf(next)).length ? 'уже заданному плану' : 'прошлой неделе'}. Поправь часы и дни.</p>
+    <div class="row" style="margin:10px 0 4px"><button class="secondary" type="button" data-act="auto" data-for="rv">Заполнить автоматически</button></div>
     ${cats().map(c => `<div class="rvrow"><span class="pname">${catDot(c)}<span>${esc(c.name)}</span>${isMax(c) ? '<span class="tag">лимит</span>' : ''}</span>
       <span class="mute sm">было ${hmm(fa(c.id))}</span>
       <label class="hrs"><input type="text" inputmode="decimal" data-rvplan="${c.id}" value="${R.plan[c.id] ? hoursStr(R.plan[c.id]) : ''}" placeholder="0" aria-label="Часов на ${esc(c.name)}"><span class="mute sm">ч</span></label></div>`).join('')}
@@ -871,7 +945,8 @@ function renderSet() {
     <div class="tpl">${D.tpl.kinds.map((k, i) => `<button type="button" class="${k}" data-act="tpl" data-i="${i}"><b>${WD[i]}</b>${k === 'main' ? '★' : k === 'off' ? 'вых' : 'обыч'}</button>`).join('')}</div>
   </section>
 
-  <section class="card">
+  ${DEMO ? `<section class="card"><h2>Демо-режим</h2><p class="mute sm">Здесь придуманные данные, они хранятся отдельно от настоящих. Синхронизация выключена.</p>
+    <div class="row" style="margin-top:10px"><button class="secondary" type="button" data-act="demoreset">Начать демо заново</button></div></section>` : `<section class="card">
     <h2>Синхронизация ноутбука и телефона</h2>
     <p class="sm" id="syncStatus">${esc(syncText())}</p>
     ${S.token ? `
@@ -890,7 +965,7 @@ function renderSet() {
       <label class="field">Токен GitHub<input type="password" id="tokenIn" autocomplete="off" placeholder="github_pat_…"></label>
       <div class="row" style="margin-top:10px"><button class="primary" type="button" data-act="syncon">Включить</button></div>
       <p class="mute sm" style="margin-top:10px">Секретный gist не виден в профиле и поиске, но открывается по прямой ссылке. Паролей в задачах не храни.</p>`}
-  </section>
+  </section>`}
 
   <section class="card">
     <h2>Таблицы (CSV)</h2>
@@ -1046,6 +1121,7 @@ view.addEventListener('click', e => {
     case 'copyplan': setWeek(V.week, { plan: { ...planOf(addDays(V.week, -7)) } }); return render();
     // итоги
     case 'review': return openReview(b.dataset.w);
+    case 'auto': return openAuto(b.dataset.for);
     case 'rvhide': V.hideReview = true; return render();
     case 'rvback': V.rv = null; return go('week');
     case 'rvkind': { const order = ['normal', 'main', 'off'], i = +b.dataset.i; V.rv.kinds[i] = order[(order.indexOf(V.rv.kinds[i]) + 1) % 3]; return render(); }
@@ -1087,6 +1163,7 @@ view.addEventListener('click', e => {
     case 'syncoff':
       if (!confirm('Отключить синхронизацию на этом устройстве? Данные здесь и в gist останутся.')) return;
       S.token = ''; S.gist = ''; S.last = 0; saveS(); syncState = 'off'; return render();
+    case 'demoreset': if (!confirm('Стереть изменения и вернуть демо-данные?')) return; D = demoData(); save(); V.day = today(); V.week = weekStart(today()); V.hideReview = false; return go('day');
     case 'csvtime': return csvTime();
     case 'csvweeks': return csvWeeks();
     case 'export': return download(`every-day-${today()}.json`, JSON.stringify(D, null, 1), 'application/json');
@@ -1269,10 +1346,129 @@ gdlg.addEventListener('close', () => {
   save(); render();
 });
 
+/* ---------- автоплан ----------
+   У каждой категории «не меньше» свой способ получить часы:
+   p   — приоритет 1/2/3, делит остаток по весам (по умолчанию 1 : 2 : 3)
+   pct — своя доля в процентах от того, что осталось после «ровно»
+   fix — ровно столько часов
+   off — без часов
+   Сначала вычитаются «ровно», затем проценты, остаток делится по приоритетам. */
+const adlg = $('#adlg'), aform = $('#aForm');
+let AP = null;
+const apCfg = id => (D.ap.cats && D.ap.cats[id]) || { t: 'p', v: 2 };
+function openAuto(kind) {
+  const ws = kind === 'rv' ? addDays(V.rv.ws, 7) : V.week;
+  const base = kind === 'rv' ? { ...V.rv.plan } : { ...planOf(ws) };
+  const src = kind === 'rv' ? V.rv.ws : addDays(ws, -7), st = weekStats(src);
+  const debt = {};
+  for (const c of cats()) {
+    if (isMax(c) || !st.plan[c.id]) continue;
+    const fa = st.days.reduce((a, d) => a + (st.f[d][c.id] || 0), 0), gap = st.plan[c.id] - fa / 60;
+    if (gap >= 15) debt[c.id] = gap;
+  }
+  const mins = cats().filter(c => !isMax(c)), sumBase = mins.reduce((a, c) => a + (base[c.id] || 0), 0);
+  AP = { kind, ws, base, debt, cfg: Object.fromEntries(mins.map(c => [c.id, { ...apCfg(c.id) }])) };
+  const total = D.ap.total || Math.round(sumBase / 60) || 20;
+  aform.total.value = Math.min(80, total); aform.totalN.value = hoursStr(total * 60);
+  const w = D.ap.w || [1, 2, 3];
+  aform.w1.value = String(w[0]).replace('.', ','); aform.w2.value = String(w[1]).replace('.', ','); aform.w3.value = String(w[2]).replace('.', ',');
+  $('#aFor').textContent = 'План на ' + fmtRange(ws) + '. Можно выбрать приоритет, свою долю в процентах или точное число часов.';
+  const dsum = sumv(debt);
+  $('#aDebtRow').hidden = !dsum; aform.debt.checked = false;
+  $('#aDebtLbl').textContent = `Добавить недобор недели ${fmtRange(src)} (+${hmm(dsum * 60)})`;
+  const opt = (v, n, cur) => `<option value="${v}"${cur === v ? ' selected' : ''}>${n}</option>`;
+  $('#aRows').innerHTML = mins.map(c => {
+    const g = AP.cfg[c.id], sel = g.t === 'p' ? 'p' + g.v : g.t;
+    return `<div class="aprow" data-c="${c.id}" style="--cc:var(--${c.color})">
+      <div class="pname">${catDot(c)}<span>${esc(c.name)}</span></div>
+      <b class="ares">0:00</b>
+      <div class="ctl">
+        <select data-ap="t" aria-label="Как считать часы для ${esc(c.name)}">${opt('p1', 'Низкий приоритет', sel)}${opt('p2', 'Средний приоритет', sel)}${opt('p3', 'Высокий приоритет', sel)}${opt('pct', 'Своя доля, %', sel)}${opt('fix', 'Ровно, часов', sel)}${opt('off', 'Без часов', sel)}</select>
+        <span class="aval"${g.t === 'pct' || g.t === 'fix' ? '' : ' hidden'}><input type="text" inputmode="decimal" data-ap="v" value="${g.t === 'fix' ? hoursStr(g.v) : g.t === 'pct' ? g.v : ''}" aria-label="Значение для ${esc(c.name)}"><span class="mute sm">${g.t === 'fix' ? 'ч' : '%'}</span></span>
+      </div>
+      <div class="pbar"><i style="width:0"></i></div>
+    </div>`;
+  }).join('') + cats().filter(isMax).map(c => `<div class="aprow" style="--cc:var(--${c.color})"><div class="pname">${catDot(c)}<span>${esc(c.name)}</span></div><span class="mute sm">лимит ${hmm((base[c.id] || 0) * 60)}, не делится</span></div>`).join('');
+  calcAuto();
+  adlg.showModal();
+}
+function readAuto() {
+  const total = parseHours(aform.totalN.value);
+  const w = [aform.w1, aform.w2, aform.w3].map(x => { const v = parseHours(x.value); return isFinite(v) && v >= 0 ? v : 0; });
+  return { total: isFinite(total) && total > 0 ? Math.min(total, 168) : 0, w };
+}
+function calcAuto() {
+  const { total, w } = readAuto(), T = total * 60, cfg = AP.cfg, res = {}, warn = [];
+  const ids = Object.keys(cfg);
+  const fixSum = ids.filter(i => cfg[i].t === 'fix').reduce((a, i) => a + (cfg[i].v || 0), 0);
+  if (fixSum > T) warn.push(`«Ровно» в сумме ${hmm(fixSum * 60)} — больше, чем всего часов.`);
+  const rem = Math.max(0, T - fixSum);
+  const pctIds = ids.filter(i => cfg[i].t === 'pct'), pctSum = pctIds.reduce((a, i) => a + (cfg[i].v || 0), 0);
+  if (pctSum > 100) warn.push(`Доли в процентах дают ${Math.round(pctSum)}%. Поделил их пропорционально.`);
+  const pctPart = rem * Math.min(pctSum, 100) / 100;
+  const pIds = ids.filter(i => cfg[i].t === 'p'), wSum = pIds.reduce((a, i) => a + (w[cfg[i].v - 1] || 0), 0);
+  const pool = rem - pctPart;
+  const raw = {};
+  for (const i of ids) {
+    const g = cfg[i];
+    let m = g.t === 'fix' ? g.v || 0 : g.t === 'pct' ? (pctSum ? pctPart * (g.v || 0) / pctSum : 0) : g.t === 'p' ? (wSum ? pool * (w[g.v - 1] || 0) / wSum : 0) : 0;
+    if (aform.debt.checked && AP.debt[i] && g.t !== 'off') m += AP.debt[i];
+    raw[i] = m;
+  }
+  // округляем до 15 минут так, чтобы сумма не «уезжала»: остаток отдаём тем, у кого дробная часть больше
+  const goal = Math.round(sumv(raw) / 15) * 15;
+  for (const i of ids) res[i] = Math.floor(raw[i] / 15) * 15;
+  let extra = Math.round((goal - sumv(res)) / 15);
+  for (const i of ids.slice().sort((x, y) => (raw[y] - res[y]) - (raw[x] - res[x]))) { if (extra <= 0) break; if (raw[i] - res[i] > 0) { res[i] += 15; extra--; } }
+  const left = pIds.length && wSum ? 0 : pool;
+  const mx = Math.max(1, ...Object.values(res));
+  document.querySelectorAll('#aRows .aprow[data-c]').forEach(row => {
+    const m = res[row.dataset.c] || 0;
+    row.querySelector('.ares').textContent = hmm(m * 60);
+    row.querySelector('.pbar i').style.width = (m / mx * 100) + '%';
+  });
+  const sum = sumv(res);
+  $('#aSum').innerHTML = `Итого: <b>${hmm(sum * 60)}</b>`;
+  $('#aLeft').textContent = left >= 15 ? `не распределено ${hmm(left * 60)}` : '';
+  $('#aWarn').hidden = !warn.length; $('#aWarn').textContent = warn.join(' ');
+  AP.res = res;
+  return res;
+}
+aform.addEventListener('input', e => {
+  const el = e.target, row = el.closest('.aprow');
+  if (el.name === 'total') aform.totalN.value = el.value;
+  if (el.name === 'totalN') { const v = parseHours(el.value); if (isFinite(v)) aform.total.value = Math.min(80, Math.max(1, Math.round(v))); }
+  if (row && el.dataset.ap === 't') {
+    const g = AP.cfg[row.dataset.c], v = el.value, box = row.querySelector('.aval'), inp = box.querySelector('input');
+    if (v[0] === 'p' && v !== 'pct') { g.t = 'p'; g.v = +v[1]; box.hidden = true; }
+    else {
+      g.t = v; box.hidden = v === 'off';
+      if (v === 'fix') { g.v = AP.res[row.dataset.c] || 60; inp.value = hoursStr(g.v); box.querySelector('span').textContent = 'ч'; }
+      if (v === 'pct') { const t = readAuto().total * 60; g.v = t ? Math.round((AP.res[row.dataset.c] || 0) / t * 100) : 0; inp.value = g.v; box.querySelector('span').textContent = '%'; }
+    }
+  }
+  if (row && el.dataset.ap === 'v') {
+    const g = AP.cfg[row.dataset.c], x = parseHours(el.value);
+    g.v = !isFinite(x) || x < 0 ? 0 : g.t === 'fix' ? Math.round(Math.min(x, 168) * 60) : Math.min(x, 100);
+  }
+  calcAuto();
+});
+aform.addEventListener('change', e => { if (e.target.name === 'debt') calcAuto(); });
+adlg.addEventListener('close', () => {
+  if (adlg.returnValue !== 'apply' || !AP) return;
+  const res = calcAuto(), plan = { ...AP.base };
+  for (const [id, m] of Object.entries(res)) { if (m > 0) plan[id] = m; else delete plan[id]; }
+  const { total, w } = readAuto();
+  D.ap = touch({ total, w, cats: { ...(D.ap.cats || {}), ...clone(AP.cfg) } });
+  if (AP.kind === 'rv' && V.rv) { V.rv.plan = plan; save(); }
+  else setWeek(AP.ws, { plan });
+  AP = null; render(); toast('План заполнен');
+});
+
 /* ================= синхронизация через GitHub Gist ================= */
 let syncState = 'off', syncMsg = '', syncTimer = 0, syncing = false, again = false;
 function setSync(st, msg) { syncState = st; syncMsg = msg || ''; renderTop(); const el = $('#syncStatus'); if (el) el.textContent = syncText(); }
-function queueSync() { if (!S.token) return; clearTimeout(syncTimer); syncTimer = setTimeout(sync, 2500); }
+function queueSync() { if (!S.token || DEMO) return; clearTimeout(syncTimer); syncTimer = setTimeout(sync, 2500); }
 async function gh(path, opt = {}) {
   const r = await fetch('https://api.github.com' + path, {
     ...opt, cache: 'no-store',
@@ -1292,7 +1488,7 @@ async function readGist(g) {
   const x = JSON.parse(txt); return x && x.v === 2 ? x : null;
 }
 async function sync() {
-  if (!S.token) return;
+  if (!S.token || DEMO) return;
   if (syncing) { again = true; return; }
   if (!navigator.onLine) return setSync('err', 'нет интернета');
   syncing = true; setSync('busy');
@@ -1328,7 +1524,7 @@ async function sync() {
 }
 
 /* ================= запуск ================= */
-const isEditing = () => dlg.open || tdlg.open || gdlg.open || V.tab === 'review' || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+const isEditing = () => dlg.open || tdlg.open || gdlg.open || adlg.open || V.tab === 'review' || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
 let tick = 0;
 setInterval(() => {
   document.querySelectorAll('[data-live]').forEach(el => { const t = getTask(el.dataset.live); if (t) el.textContent = clock(taskSecOn(t, el.dataset.day)); });
@@ -1353,6 +1549,7 @@ window.addEventListener('online', () => sync());
 setInterval(() => { if (document.visibilityState === 'visible') sync(); }, 120000);
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
+$('#demoTag').hidden = !DEMO;
 applyTheme();
 if (!localStorage.getItem(KEY)) localStorage.setItem(KEY, JSON.stringify(D));
 render();
