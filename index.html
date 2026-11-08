@@ -91,7 +91,25 @@ input[type=date]{min-height:42px}
 .note{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:.9rem}
 .note.warn{background:color-mix(in srgb,var(--danger) 14%,transparent)}
 .empty{padding:14px 4px;color:var(--mute);font-size:.92rem}
-.cdot{width:24px;height:24px;border-radius:7px;background:var(--cc);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff;flex:none}
+.cdot{width:24px;height:24px;border-radius:7px;background:var(--cc);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff;flex:none;overflow:hidden}
+.cdot img{width:100%;height:100%;object-fit:cover;display:block}
+.cdot.big{width:44px;height:44px;border-radius:12px;font-size:1.3rem}
+.iconrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.emo-in{width:64px;text-align:center;font-size:1.2rem}
+/* подсказки */
+.help-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--card);padding:0;font-weight:700;flex:none}
+#tour{position:fixed;inset:0;z-index:80}
+.tour-spot{position:absolute;border-radius:14px;box-shadow:0 0 0 9999px rgb(0 0 0 / .58);transition:all .25s ease;pointer-events:none}
+.tour-card{position:absolute;left:12px;right:12px;max-width:380px;margin:0 auto;background:var(--card);color:var(--ink);border-radius:16px;padding:16px;box-shadow:0 10px 30px rgb(0 0 0 / .3);display:grid;gap:8px;transition:top .25s ease}
+.tour-card h2{margin:0}
+.tour-card p{font-size:.93rem;line-height:1.5}
+.tour-dots{display:flex;gap:5px}
+.tour-dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.tour-dots i.on{background:var(--accent)}
+details.faq{border-top:1px solid var(--line);padding:10px 0}
+details.faq:first-of-type{border-top:0}
+details.faq summary{cursor:pointer;font-weight:500}
+details.faq p{margin-top:6px;font-size:.9rem;color:var(--mute);line-height:1.5}
 
 /* строки план/факт */
 .prow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 10px;padding:11px 0;border-top:1px solid var(--line)}
@@ -258,6 +276,7 @@ dialog::backdrop{background:rgb(0 0 0 / .45)}
     <span class="brand">Every Day</span><span class="tag" id="demoTag" hidden>демо</span>
     <span class="grow"></span>
     <button class="run-chip" id="runChip" type="button" hidden></button>
+    <button class="help-btn" id="helpBtn" type="button" title="Подсказки" aria-label="Показать подсказки">?</button>
     <button class="sync" id="syncBtn" type="button" title="Синхронизация выключена" aria-label="Синхронизация"><i></i></button>
   </div>
 </header>
@@ -356,6 +375,23 @@ dialog::backdrop{background:rgb(0 0 0 / .45)}
 
 <div class="toast" id="toast" role="status" hidden></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
+<input type="file" id="photoFile" accept="image/*" hidden>
+
+<!-- пошаговые подсказки -->
+<div id="tour" hidden>
+  <div class="tour-spot" id="tourSpot"></div>
+  <div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourH">
+    <div class="tour-dots" id="tourDots"></div>
+    <h2 id="tourH"></h2>
+    <p id="tourP"></p>
+    <div class="row">
+      <button class="secondary" type="button" id="tourBack">Назад</button>
+      <span class="grow"></span>
+      <button class="link" type="button" id="tourSkip">Закрыть</button>
+      <button class="primary" type="button" id="tourNext">Дальше</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (() => {
@@ -462,8 +498,10 @@ const cats = () => live('cats').sort((a, b) => (a.order || 0) - (b.order || 0) |
 const catById = id => { const c = id && D.cats[id]; return c && !c.del ? c : null; };
 const isMax = c => !!(c && c.mode === 'max');
 const catColor = c => c ? c.color : 'low';
-const catDot = c => `<span class="cdot" style="--cc:var(--${catColor(c)})" aria-hidden="true">${c ? (c.emoji || esc((c.name[0] || '?').toUpperCase())) : '·'}</span>`;
-const catLabel = c => c ? (c.emoji ? c.emoji + ' ' : '') + c.name : 'Без категории';
+const safeImg = v => typeof v === 'string' && /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(v) ? v : '';
+const catDot = (c, big) => `<span class="cdot${big ? ' big' : ''}" style="--cc:var(--${catColor(c)})" aria-hidden="true">${c && safeImg(c.img) ? `<img src="${c.img}" alt="">` : c ? (esc(c.emoji) || esc((c.name[0] || '?').toUpperCase())) : '·'}</span>`;
+const catLabel = c => c ? (c.emoji && !safeImg(c.img) ? c.emoji + ' ' : '') + c.name : 'Без категории';
+const firstGrapheme = v => { v = String(v || '').trim(); if (!v) return ''; try { if (Intl.Segmenter) return [...new Intl.Segmenter('ru', { granularity: 'grapheme' }).segment(v)][0].segment; } catch (e) {} return Array.from(v).slice(0, 2).join(''); };
 
 function purge() {
   const lim = Date.now() - 90 * 864e5;
@@ -706,7 +744,7 @@ function renderDay() {
   ${sk ? `<p class="note warn">День отмечен пропущенным. Его план не переносится на другие дни и считается недобором.</p>` : ''}
   ${d === td ? nowSuggestion() : ''}
 
-  <section class="card">
+  <section class="card" id="dayPlan">
     <div class="card-h"><h2>План на день</h2>${sumT ? `<span class="mute sm">${hmm(sumF)} из ${hmm(sumT)}</span>` : sumF ? `<span class="mute sm">сделано ${hmm(sumF)}</span>` : ''}
       <button class="ghost" type="button" data-act="addtime">+ Время</button></div>
     ${!hasPlan && !rows ? `<p class="empty">На эту неделю план не задан. <button class="link" type="button" data-act="goweek">Задать план</button></p>`
@@ -714,7 +752,7 @@ function renderDay() {
     ${logs.length ? `<h3>Время без задач</h3><ul class="loglist">${logs.map(l => { const c = catById(l.cat); return `<li>${catDot(c)}<span class="grow">${esc(c ? c.name : 'Без категории')}${l.from ? ` <span class="mute sm">${l.from}–${l.to}</span>` : ''}</span><b>${hmm(l.sec)}</b><button class="x" type="button" data-act="logdel" data-id="${l.id}" aria-label="Удалить запись">✕</button></li>`; }).join('')}</ul>` : ''}
   </section>
 
-  <section class="card">
+  <section class="card" id="taskCard">
     <h2>Задачи</h2>
     <form class="add" data-form="task">
       <input type="text" name="title" placeholder="Например: Present Simple, MEX/XOR" maxlength="140" required autocomplete="off" aria-label="Новая задача">
@@ -739,7 +777,7 @@ function historyCard() {
     return `<button type="button" class="${cls}${w === cur ? ' cur' : ''}${w === V.week ? ' sel' : ''}" data-act="gow" data-w="${w}" title="${label}" aria-label="${label}"><i style="height:${s.p ? Math.max(2, pct) : 2}%"></i></button>`;
   }).join('');
   const xs = st.map(({ w, s }) => `<span class="${s.success ? 'ok' : ''}">${s.success ? '✓' : parse(w).getDate()}</span>`).join('');
-  return `<section class="card">
+  return `<section class="card" id="histCard">
     <div class="card-h"><h2>Последние 12 недель</h2><span class="${n ? 'good' : 'mute'} sm" style="font-weight:600">${n ? `🔥 ${n} ${plural(n, 'неделя', 'недели', 'недель')} подряд` : 'серии пока нет'}</span></div>
     <p class="mute sm">Подписи — число, с которого начинается неделя. Высота — сколько процентов плана сделано. Зелёная с ✓ — неделя выполнена полностью и без превышения лимитов. Нажми на неделю, чтобы открыть её.</p>
     <div class="hist">${bars}</div><div class="hist-x">${xs}</div>
@@ -768,7 +806,7 @@ function renderWeek() {
       <div class="seg" role="group" aria-label="Тип дня">${['main', 'normal', 'off'].map(x => `<button type="button" data-act="kind" data-k="${x}" data-d="${sel}" aria-pressed="${kindOf(sel) === x}">${KN[x]}</button>`).join('')}</div>
       <button class="chip skip" type="button" data-act="skip" data-d="${sel}" aria-pressed="${skipped(sel)}">${skipped(sel) ? '✕ Пропущен' : 'Пропуск'}</button>
       <button class="link" type="button" data-act="openday" data-d="${sel}">Открыть день →</button>
-    </div>` : `<p class="mute sm" style="margin-top:8px">Нажми на день, чтобы сделать его главным, выходным или отметить пропуск.</p>`;
+    </div>` : `<p class="mute sm" style="margin-top:8px">Нажми на день, чтобы сделать его главным, выходным или отметить пропуск. Какими дни будут по умолчанию — в <button class="link" type="button" data-act="gotpl">Настройки → Обычная неделя</button>.</p>`;
 
   const rows = cats().map(c => {
     const p = (plan[c.id] || 0) * 60, fa = sum(c.id);
@@ -830,7 +868,7 @@ function renderWeek() {
     <div class="row" style="margin-top:12px"><button class="secondary" type="button" data-act="review" data-w="${ws}">Итоги недели и план на следующую →</button></div>
   </section>
 
-  <section class="card">
+  <section class="card" id="planCard">
     <div class="card-h"><h2>План на неделю</h2>${Object.keys(prevPlan).length && !Object.keys(plan).length ? `<button class="ghost" type="button" data-act="copyplan">Как на прошлой неделе</button>` : ''}${cats().length ? `<button class="ghost" type="button" data-act="auto" data-for="week">Автоплан</button>` : ''}</div>
     <p class="mute sm">Сколько часов хочешь отдать каждой категории. Главный день получает вдвое больше времени, выходной — ноль. Для категорий «не больше» это лимит на неделю.</p>
     ${cats().length ? rows : `<p class="empty">Сначала создай категории. <button class="link" type="button" data-act="gocats">Категории →</button></p>`}
@@ -915,7 +953,12 @@ function renderCats() {
           <div class="seg" role="group" aria-label="Тип цели"><button type="button" data-act="cmode" data-id="${c.id}" data-v="min" aria-pressed="${!isMax(c)}">Не меньше</button><button type="button" data-act="cmode" data-id="${c.id}" data-v="max" aria-pressed="${isMax(c)}">Не больше</button></div></div>
         <p class="mute sm" style="margin:-4px 0 0">${isMax(c) ? 'Лимит: например, игры или соцсети. В недобор не идёт, превышение подсвечивается красным.' : 'Обычная цель: часы делятся по дням, нехватка считается недобором.'}</p>
         <div class="swatches" role="group" aria-label="Цвет">${SLOTS.map(s => `<button type="button" class="sw" style="--cc:var(--${s})" data-act="ccolor" data-id="${c.id}" data-v="${s}" aria-pressed="${c.color === s}" aria-label="Цвет ${s.slice(1)}"></button>`).join('')}</div>
-        <div class="emojis" role="group" aria-label="Значок"><button type="button" class="emo" data-act="cemoji" data-id="${c.id}" data-v="" aria-pressed="${!c.emoji}" aria-label="Первая буква">Аа</button>${EMOJI.map(e => `<button type="button" class="emo" data-act="cemoji" data-id="${c.id}" data-v="${e}" aria-pressed="${c.emoji === e}">${e}</button>`).join('')}</div>
+        <div class="emojis" role="group" aria-label="Значок"><button type="button" class="emo" data-act="cemoji" data-id="${c.id}" data-v="" aria-pressed="${!c.emoji && !safeImg(c.img)}" aria-label="Первая буква">Аа</button>${EMOJI.map(e => `<button type="button" class="emo" data-act="cemoji" data-id="${c.id}" data-v="${e}" aria-pressed="${c.emoji === e && !safeImg(c.img)}">${e}</button>`).join('')}</div>
+        <div class="iconrow">${catDot(c, true)}
+          <label class="mute sm" style="display:flex;align-items:center;gap:6px">Своё эмодзи<input type="text" class="emo-in" data-cemoji="${c.id}" value="${c.emoji && !EMOJI.includes(c.emoji) && !safeImg(c.img) ? esc(c.emoji) : ''}" placeholder="🙂" aria-label="Своё эмодзи для ${esc(c.name)}"></label>
+          <button class="secondary" type="button" data-act="cphoto" data-id="${c.id}">Своё фото</button>
+          ${safeImg(c.img) ? `<button class="link danger" type="button" data-act="cphotodel" data-id="${c.id}">Убрать фото</button>` : ''}
+        </div>
         <div class="row"><span class="mute sm grow">Задач: ${nT}</span><button class="secondary danger" type="button" data-act="cdel" data-id="${c.id}">Удалить категорию</button></div>
       </div>` : ''}`;
   }).join('');
@@ -941,13 +984,25 @@ function syncText() {
 function renderSet() {
   return `
   <div class="head"><h1 class="grow">Настройки</h1></div>
+  <section class="card" id="helpCard">
+    <div class="card-h"><h2>Как это работает</h2><button class="ghost" type="button" data-act="tour">Показать подсказки</button></div>
+    <details class="faq"><summary>С чего начать</summary><p>1) Во вкладке «Категории» заведи свои большие темы: английский, CP, матан. 2) Во вкладке «Неделя» впиши, сколько часов хочешь отдать каждой, или нажми «Автоплан». 3) Во вкладке «День» добавляй задачи, привязывай их к категориям и запускай таймер ▶.</p></details>
+    <details class="faq"><summary>Где настраивать дни недели</summary><p>Конкретный день: вкладка «Неделя» → нажми на день → «Главный», «Обычный», «Выходной» или «Пропуск». То же самое есть вверху вкладки «День». Какими дни будут по умолчанию каждую неделю — ниже, в блоке «Обычная неделя».</p></details>
+    <details class="faq"><summary>Как часы делятся по дням</summary><p>План недели раскладывается по дням с весами: главный день — 2 доли, обычный — 1, выходной — 0. Например, 10 часов при 4 обычных днях и одном главном: обычный день 1 ч 40 мин, главный 3 ч 20 мин.</p></details>
+    <details class="faq"><summary>Пропуск, выходной и недобор</summary><p>Выходной планируется заранее, и часы на него не выделяются. Пропуск отмечают, когда день сорвался: его часы не переносятся на другие дни и становятся недобором. Недобор — сколько по плану уже должно было быть сделано к сегодняшнему дню, но не сделано.</p></details>
+    <details class="faq"><summary>Лимиты «не больше»</summary><p>В редакторе категории выбери «Не больше», и часы в плане станут лимитом: например, игры до 5 часов в неделю. Лимит не идёт в недобор, превышение подсвечивается красным.</p></details>
+    <details class="faq"><summary>Забыл включить или выключить таймер</summary><p>Забыл включить: «+15 / +30 / +1 ч» у категории или «+ Время» на вкладке «День», там можно указать отрезок «с — по» за любой день. Забыл выключить: если таймер идёт больше 3 часов, приложение само спросит, когда ты закончил.</p></details>
+    <details class="faq"><summary>Итоги недели и автоплан</summary><p>В воскресенье или в начале новой недели появится баннер «Подведи итоги». Там видно план и факт, несделанные задачи можно перенести, а план на следующую неделю заполняется по прошлой или через «Заполнить автоматически».</p></details>
+    <details class="faq"><summary>Ноутбук и телефон</summary><p>Ниже, в блоке «Синхронизация», можно подключить свой GitHub: данные будут одинаковыми на всех устройствах. Без синхронизации переноси данные кнопками «Скачать копию» и «Загрузить из файла».</p></details>
+  </section>
+
   <section class="card">
     <div class="card-h"><h2>Тема</h2>
       <div class="seg" role="group" aria-label="Тема">${[['system', 'Авто'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([v, n]) => `<button type="button" data-act="theme" data-v="${v}" aria-pressed="${S.theme === v}">${n}</button>`).join('')}</div>
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" id="tplCard">
     <h2>Обычная неделя</h2>
     <p class="mute sm">Такими дни будут по умолчанию. Конкретный день всегда можно поменять на вкладке «Неделя». Нажимай, чтобы переключать: обычный → главный → выходной.</p>
     <div class="tpl">${D.tpl.kinds.map((k, i) => `<button type="button" class="${k}" data-act="tpl" data-i="${i}"><b>${WD[i]}</b>${k === 'main' ? '★' : k === 'off' ? 'вых' : 'обыч'}</button>`).join('')}</div>
@@ -1079,6 +1134,73 @@ function paintRep() {
   row.hidden = !V.newRep; btn.setAttribute('aria-pressed', !!V.newRep);
   row.querySelector('.wdchips').innerHTML = wdChips(V.newRep || [], 'nwd');
 }
+/* ---------- фото категории: обрезаем по центру до квадрата 96×96 и храним как data URL ---------- */
+let photoFor = null;
+$('#photoFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value = '';
+  const c = photoFor && D.cats[photoFor]; photoFor = null;
+  if (!file || !c) return;
+  try {
+    const url = URL.createObjectURL(file);
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('не удалось открыть картинку')); i.src = url; });
+    const N = 96, cv = document.createElement('canvas'); cv.width = cv.height = N;
+    const k = Math.min(img.naturalWidth, img.naturalHeight), sx = (img.naturalWidth - k) / 2, sy = (img.naturalHeight - k) / 2;
+    cv.getContext('2d').drawImage(img, sx, sy, k, k, 0, 0, N, N);
+    URL.revokeObjectURL(url);
+    let data = cv.toDataURL('image/webp', 0.82);
+    if (!data.startsWith('data:image/webp')) data = cv.toDataURL('image/jpeg', 0.85);
+    c.img = data; touch(c); save(); render(); toast('Фото поставлено');
+  } catch (err) { toast('Не получилось: ' + err.message); }
+});
+
+/* ---------- пошаговые подсказки ---------- */
+const TOUR = [
+  { title: 'Это Every Day', text: 'Ты заранее решаешь, сколько часов в неделю отдать каждой теме, а приложение показывает, сколько сделано и где отстаёшь. Пройдёмся по основным местам, это минута.' },
+  { tab: 'cats', sel: '.tabs [data-tab="cats"]', title: 'Категории', text: 'Твои большие темы: английский, CP, матан. Задачи и план привязываются к ним. Здесь же цвет, значок или своё фото, и тип цели: «не меньше» или «не больше» для лимитов.' },
+  { tab: 'week', sel: '.strip', title: 'Дни недели', text: 'Нажми на день, чтобы сделать его главным (вдвое больше часов), обычным или выходным. Если день сорвался, отметь пропуск: его часы уйдут в недобор.' },
+  { tab: 'week', sel: '#planCard', title: 'План на неделю', text: 'Впиши, сколько часов хочешь на каждую категорию. «Автоплан» распределит их сам: по приоритетам, своим процентам или точным часам.' },
+  { tab: 'week', sel: '#histCard', title: 'История и серия', text: 'Сколько процентов плана сделано за последние 12 недель. Зелёная неделя с ✓ — план выполнен полностью; подряд такие недели дают серию 🔥.' },
+  { tab: 'day', sel: '#taskCard', title: 'Задачи', text: 'Добавь задачу, например «MEX/XOR», и выбери категорию. «↻ Повтор» — повторять по дням недели. ▶ запускает таймер, время пойдёт в план категории.' },
+  { tab: 'day', sel: '#dayPlan', title: 'План на день', text: 'Сколько по плану осталось сегодня. Забыл включить таймер — нажми «+15 / +30 / +1 ч» или «+ Время», там можно указать отрезок за любой день.' },
+  { tab: 'set', sel: '#tplCard', title: 'Настройки недели', text: 'Здесь «обычная неделя»: какие дни по умолчанию главные, а какие выходные. Ниже — синхронизация ноутбука и телефона через твой GitHub.' },
+  { sel: '#helpBtn', title: 'Если что-то забудешь', text: 'Кнопка «?» запускает эти подсказки снова. Ответы на частые вопросы — в Настройках, в блоке «Как это работает».' }
+];
+let tourI = -1;
+function startTour() { tourI = 0; $('#tour').hidden = false; showTour(); }
+function endTour() {
+  $('#tour').hidden = true; tourI = -1;
+  if (!S.tourDone) { S.tourDone = 1; saveS(); }
+  go('day');
+}
+function showTour() {
+  const st = TOUR[tourI];
+  if (st.tab && V.tab !== st.tab) go(st.tab);
+  $('#tourH').textContent = st.title; $('#tourP').textContent = st.text;
+  $('#tourDots').innerHTML = TOUR.map((_, i) => `<i class="${i === tourI ? 'on' : ''}"></i>`).join('');
+  $('#tourBack').style.visibility = tourI ? 'visible' : 'hidden';
+  $('#tourNext').textContent = tourI === TOUR.length - 1 ? 'Готово' : 'Дальше';
+  const el = st.sel && $(st.sel);
+  if (el && !el.closest('.top,.tabs')) el.scrollIntoView({ block: 'center' });
+  requestAnimationFrame(placeTour);
+  $('#tourNext').focus();
+}
+function placeTour() {
+  if (tourI < 0) return;
+  const st = TOUR[tourI], el = st.sel && $(st.sel), spot = $('#tourSpot'), card = $('#tourCard');
+  const H = innerHeight, ch = card.offsetHeight;
+  if (!el) { spot.style.cssText = `left:50%;top:40%;width:0;height:0`; card.style.top = Math.max(12, (H - ch) / 2) + 'px'; return; }
+  const r = el.getBoundingClientRect(), top = Math.max(6, r.top - 6), bot = Math.min(H - 6, r.bottom + 6);
+  spot.style.cssText = `left:${r.left - 6}px;top:${top}px;width:${r.width + 12}px;height:${Math.max(0, bot - top)}px`;
+  card.style.top = (bot + ch + 16 < H ? bot + 12 : top - ch - 12 > 0 ? top - ch - 12 : Math.max(12, H - ch - 12)) + 'px';
+}
+$('#tourNext').addEventListener('click', () => { if (tourI >= TOUR.length - 1) return endTour(); tourI++; showTour(); });
+$('#tourBack').addEventListener('click', () => { if (tourI > 0) { tourI--; showTour(); } });
+$('#tourSkip').addEventListener('click', endTour);
+$('#helpBtn').addEventListener('click', startTour);
+addEventListener('resize', () => requestAnimationFrame(placeTour));
+addEventListener('scroll', () => requestAnimationFrame(placeTour), { passive: true });
+addEventListener('keydown', e => { if (tourI >= 0 && e.key === 'Escape') endTour(); });
+
 // своё окно подтверждения: возвращает Promise<boolean>
 function ask(text, ok) {
   const d = $('#cdlg');
@@ -1153,7 +1275,11 @@ view.addEventListener('click', async e => {
     // категории
     case 'cedit': V.editCat = V.editCat === id ? null : id; return render();
     case 'ccolor': { const c = D.cats[id]; c.color = b.dataset.v; touch(c); save(); return render(); }
-    case 'cemoji': { const c = D.cats[id]; c.emoji = b.dataset.v; touch(c); save(); return render(); }
+    case 'cemoji': { const c = D.cats[id]; c.emoji = b.dataset.v; c.img = ''; touch(c); save(); return render(); }
+    case 'cphoto': photoFor = id; return $('#photoFile').click();
+    case 'cphotodel': { const c = D.cats[id]; c.img = ''; touch(c); save(); return render(); }
+    case 'gotpl': go('set'); { const el = $('#tplCard'); if (el) el.scrollIntoView({ block: 'center' }); } return;
+    case 'tour': return startTour();
     case 'cmode': { const c = D.cats[id]; c.mode = b.dataset.v; touch(c); save(); return render(); }
     case 'cdel': {
       const c = D.cats[id], n = live('tasks').filter(x => x.cat === id).length;
@@ -1211,7 +1337,7 @@ view.addEventListener('submit', e => {
     const name = form.name.value.trim(); if (!name) return;
     const used = new Set(cats().map(c => c.color));
     const c = touch({ id: uid(), name, color: SLOTS.find(s => !used.has(s)) || SLOTS[cats().length % SLOTS.length], emoji: '', mode: 'min', order: Date.now() });
-    D.cats[c.id] = c; save(); render();
+    D.cats[c.id] = c; V.editCat = c.id; save(); render(); // сразу открываем редактор: цвет, значок, фото
   }
 });
 
@@ -1221,6 +1347,11 @@ view.addEventListener('change', e => {
     const v = parseHours(el.value);
     if (el.value.trim() && (!isFinite(v) || v < 0 || v > 168)) { toast('Введи число часов от 0 до 168'); return render(); }
     setPlan(V.week, el.dataset.plan, Math.round((v || 0) * 60));
+    return render();
+  }
+  if (el.dataset.cemoji) {
+    const c = D.cats[el.dataset.cemoji], g = firstGrapheme(el.value);
+    if (g) { c.emoji = g; c.img = ''; touch(c); save(); }
     return render();
   }
   if (el.dataset.cname) {
@@ -1538,7 +1669,7 @@ async function sync() {
 }
 
 /* ================= запуск ================= */
-const isEditing = () => $('#cdlg').open || dlg.open || tdlg.open || gdlg.open || adlg.open || V.tab === 'review' || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+const isEditing = () => tourI >= 0 || $('#cdlg').open || dlg.open || tdlg.open || gdlg.open || adlg.open || V.tab === 'review' || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
 let tick = 0;
 setInterval(() => {
   document.querySelectorAll('[data-live]').forEach(el => { const t = getTask(el.dataset.live); if (t) el.textContent = clock(taskSecOn(t, el.dataset.day)); });
@@ -1567,7 +1698,7 @@ $('#demoTag').hidden = !DEMO;
 applyTheme();
 if (!localStorage.getItem(KEY)) localStorage.setItem(KEY, JSON.stringify(D));
 render();
-checkGuard();
+if (!S.tourDone) startTour(); else checkGuard();
 sync();
 })();
 </script>
